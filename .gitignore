@@ -22,3 +22,6 @@ release/
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# anotações locais
+/roadmap.md
