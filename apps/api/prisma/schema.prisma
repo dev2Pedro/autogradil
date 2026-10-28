@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  clientRequestId String   @unique
+  lengthMm        Int
+  heightMm        Int
+  color           String
+  confirmedAt     DateTime @default(now())
+
+  @@index([confirmedAt])
+}
