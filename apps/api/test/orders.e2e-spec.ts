@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { HttpExceptionFilter } from 'src/common/http-exception.filter';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('/api/orders', () => {
   const dbDir = mkdtempSync(path.join(tmpdir(), 'autogradil-e2e-'));
@@ -62,6 +63,17 @@ describe('/api/orders', () => {
     expect(response.body).toMatchObject(input);
     expect(response.body).not.toHaveProperty('panels');
     expect(response.body.confirmedAt).not.toBe('2000-01-01T00:00:00.000Z');
+  });
+
+  it('confirmar grava exatamente um pedido no banco', async () => {
+    const prisma = app.get(PrismaService);
+    const input = orderInput();
+
+    const response = await post(input);
+
+    const rows = await prisma.order.findMany({ where: { clientRequestId: input.clientRequestId } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: response.body.id, lengthMm: 6000, heightMm: 1530, color: 'white' });
   });
 
   it('retorna 200 com o pedido existente ao repetir o mesmo payload', async () => {
