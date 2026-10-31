@@ -9,7 +9,7 @@ export class OrdersService {
 
   async create(input: CreateOrderInput) {
     try {
-      return await this.prismaService.order.create({
+      const order = await this.prismaService.order.create({
         data: {
           lengthMm: input.lengthMm,
           heightMm: input.heightMm,
@@ -17,6 +17,7 @@ export class OrdersService {
           clientRequestId: input.clientRequestId,
         },
       });
+      return { order, created: true };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         const existing = await this.prismaService.order.findUnique({
@@ -28,7 +29,7 @@ export class OrdersService {
           existing.heightMm === input.heightMm &&
           existing.color === input.color;
 
-        if (samePayload) return existing;
+        if (samePayload) return { order: existing, created: false };
 
         throw new ConflictException({
           code: 'CONFLICT',
