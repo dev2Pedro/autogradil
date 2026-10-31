@@ -9,7 +9,7 @@ import request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { HttpExceptionFilter } from 'src/common/http-exception.filter';
 
-describe('POST /api/orders', () => {
+describe('/api/orders', () => {
   const dbDir = mkdtempSync(path.join(tmpdir(), 'autogradil-e2e-'));
   let app: INestApplication;
 
@@ -41,6 +41,18 @@ describe('POST /api/orders', () => {
   function orderInput() {
     return { lengthMm: 6000, heightMm: 1530, color: 'white', clientRequestId: randomUUID() };
   }
+
+  function list() {
+    return request(app.getHttpServer()).get('/api/orders');
+  }
+
+  // Precisa ser o primeiro teste: os demais gravam no mesmo banco.
+  it('GET retorna [] quando não há pedidos', async () => {
+    const response = await list();
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
 
   it('cria o pedido com 201 e confirmedAt gerado pelo servidor', async () => {
     const input = orderInput();
@@ -94,5 +106,37 @@ describe('POST /api/orders', () => {
     expect(Object.keys(response.body.error.fields)).toEqual(
       expect.arrayContaining(['lengthMm', 'heightMm', 'color', 'clientRequestId']),
     );
+  });
+
+  it('GET lista do mais recente ao mais antigo', async () => {
+    const created = [];
+    for (let i = 0; i < 3; i++) created.push((await post(orderInput())).body);
+
+    const response = await list();
+    const ids: number[] = response.body.map((order: { id: number }) => order.id);
+
+    expect(response.status).toBe(200);
+    expect(ids.slice(0, 3)).toEqual(created.map((order) => order.id).reverse());
+    expect(ids).toEqual([...ids].sort((a, b) => b - a));
+  });
+
+  it('GET devolve cada item com summary recalculado e sem clientRequestId', async () => {
+    const created = (await post({ ...orderInput(), lengthMm: 6000, heightMm: 1530 })).body;
+
+    const response = await list();
+    const item = response.body.find((order: { id: number }) => order.id === created.id);
+
+    expect(item).toEqual({
+      id: created.id,
+      lengthMm: 6000,
+      heightMm: 1530,
+      color: 'white',
+      confirmedAt: created.confirmedAt,
+      summary: {
+        soldLengthMm: 7500,
+        differenceMm: 1500,
+        components: { panels: 3, posts: 4, fasteners: 12, screws: 16 },
+      },
+    });
   });
 });

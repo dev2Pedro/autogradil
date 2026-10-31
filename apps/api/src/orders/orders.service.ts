@@ -1,4 +1,4 @@
-import { CreateOrderInput } from '@autogradil/shared';
+import { calculateFence, CreateOrderInput, type HeightMm } from '@autogradil/shared';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
@@ -38,5 +38,27 @@ export class OrdersService {
       }
       throw error;
     }
+  }
+
+  async list() {
+    const orders = await this.prismaService.order.findMany({
+      orderBy: [{ confirmedAt: 'desc' }, { id: 'desc' }],
+    });
+
+    return orders.map(({ id, lengthMm, heightMm, color, confirmedAt }) => {
+      const { soldLengthMm, differenceMm, components } = calculateFence({
+        lengthMm,
+        heightMm: heightMm as HeightMm,
+      });
+
+      return {
+        id,
+        lengthMm,
+        heightMm,
+        color,
+        confirmedAt,
+        summary: { soldLengthMm, differenceMm, components },
+      };
+    });
   }
 }
