@@ -21,8 +21,20 @@ async function bootstrap() {
     app.enableCors({ origin: corsOrigin });
   }
 
-  await app.listen(port);
+  const logger = new Logger('Bootstrap');
 
-  new Logger('Bootstrap').log(`API rodando em http://localhost:${port}/api`);
+  try {
+    await app.listen(port);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EADDRINUSE') {
+      logger.error(
+        `A porta ${port} já está em uso. Feche o outro processo ou defina outra PORT no .env.`,
+      );
+      process.exit(1);
+    }
+    throw error;
+  }
+
+  logger.log(`API rodando em http://localhost:${port}/api`);
 }
 bootstrap();
