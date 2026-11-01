@@ -27,3 +27,6 @@ release/
 /roadmap.md
 /RELATORIO.md
 /.claude
+
+# gerado pelo Next a cada build
+next-env.d.ts
