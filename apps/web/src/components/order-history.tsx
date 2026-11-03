@@ -1,21 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { toast } from 'sonner';
-import { CircleAlertIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
+import { CircleAlertIcon, EyeIcon, RefreshCwIcon } from 'lucide-react';
 import type { OrderListItem } from '@autogradil/shared';
+import { DeleteOrderButton } from '@/components/delete-order-button';
+import { OrderDetailsDialog } from '@/components/order-details-dialog';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -27,18 +18,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type ApiError, deleteOrder, listOrders, toApiError } from '@/lib/api-client';
-import { API_ERROR_TITLES, COLOR_LABELS, formatMeters } from '@/lib/labels';
+import { type ApiError, listOrders, toApiError } from '@/lib/api-client';
+import { API_ERROR_TITLES, COLOR_LABELS, formatDateTime, formatMeters } from '@/lib/labels';
 
 type HistoryState =
   | { status: 'loading' }
   | { status: 'error'; error: ApiError }
   | { status: 'success'; orders: OrderListItem[] };
-
-const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
-  dateStyle: 'short',
-  timeStyle: 'short',
-});
 
 const quantityFormat = new Intl.NumberFormat('pt-BR');
 
@@ -46,73 +32,13 @@ function plural(count: number, singular: string, pluralForm: string) {
   return `${quantityFormat.format(count)} ${count === 1 ? singular : pluralForm}`;
 }
 
-function DeleteOrderButton({ orderId, onDeleted }: { orderId: number; onDeleted: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const deleteLock = useRef(false);
+type OrderCardProps = {
+  order: OrderListItem;
+  onDeleted: () => void;
+  onOpenDetails: () => void;
+};
 
-  async function handleDelete() {
-    if (deleteLock.current) return;
-    deleteLock.current = true;
-    setDeleting(true);
-
-    try {
-      await deleteOrder(orderId);
-      toast.success(`Pedido nº ${orderId} excluído.`);
-      setOpen(false);
-      onDeleted();
-    } catch (error) {
-      const apiError = toApiError(error);
-      if (apiError.kind === 'not_found') {
-        toast.info(`O pedido nº ${orderId} já tinha sido excluído.`);
-        setOpen(false);
-        onDeleted();
-      } else {
-        toast.error(API_ERROR_TITLES[apiError.kind], { description: apiError.message });
-      }
-    } finally {
-      deleteLock.current = false;
-      setDeleting(false);
-    }
-  }
-
-  return (
-    <>
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={() => setOpen(true)}
-        aria-label={`Excluir pedido nº ${orderId}`}
-      >
-        <Trash2Icon />
-        Excluir
-      </Button>
-      <AlertDialog
-        open={open}
-        onOpenChange={(next) => {
-          if (!deleting) setOpen(next);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir o pedido nº {orderId}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O pedido sai do histórico e não pode ser recuperado.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Excluindo…' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
-function OrderCard({ order, onDeleted }: { order: OrderListItem; onDeleted: () => void }) {
+function OrderCard({ order, onDeleted, onOpenDetails }: OrderCardProps) {
   const { summary } = order;
   const rows = [
     { label: 'Comprimento solicitado', value: formatMeters(order.lengthMm) },
@@ -130,20 +56,34 @@ function OrderCard({ order, onDeleted }: { order: OrderListItem; onDeleted: () =
   ].join(' · ');
 
   return (
-    <Card size="sm">
+    <Card
+      size="sm"
+      onClick={onOpenDetails}
+      className="cursor-pointer transition-colors hover:bg-muted/40"
+    >
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           Pedido nº {order.id}
           <Badge variant="secondary">{COLOR_LABELS[order.color]}</Badge>
         </CardTitle>
-        <CardAction>
+        <CardAction
+          className="flex flex-wrap justify-end gap-2"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenDetails}
+            aria-label={`Ver detalhes do pedido nº ${order.id}`}
+          >
+            <EyeIcon />
+            Detalhes
+          </Button>
           <DeleteOrderButton orderId={order.id} onDeleted={onDeleted} />
         </CardAction>
         <CardDescription>
           Confirmado em{' '}
-          <time dateTime={order.confirmedAt}>
-            {dateTimeFormat.format(new Date(order.confirmedAt))}
-          </time>
+          <time dateTime={order.confirmedAt}>{formatDateTime(order.confirmedAt)}</time>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -163,6 +103,11 @@ function OrderCard({ order, onDeleted }: { order: OrderListItem; onDeleted: () =
 
 export function OrderHistory() {
   const [state, setState] = useState<HistoryState>({ status: 'loading' });
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const selectedOrder =
+    state.status === 'success'
+      ? (state.orders.find((order) => order.id === selectedId) ?? null)
+      : null;
 
   const load = useCallback(async () => {
     setState({ status: 'loading' });
@@ -246,12 +191,27 @@ export function OrderHistory() {
           <ol className="space-y-4">
             {state.orders.map((order) => (
               <li key={order.id}>
-                <OrderCard order={order} onDeleted={() => removeFromList(order.id)} />
+                <OrderCard
+                  order={order}
+                  onDeleted={() => removeFromList(order.id)}
+                  onOpenDetails={() => setSelectedId(order.id)}
+                />
               </li>
             ))}
           </ol>
         </section>
       )}
+
+      <OrderDetailsDialog
+        order={selectedOrder}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+        onDeleted={(id) => {
+          setSelectedId(null);
+          removeFromList(id);
+        }}
+      />
     </div>
   );
 }
