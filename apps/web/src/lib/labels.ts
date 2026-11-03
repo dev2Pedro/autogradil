@@ -1,3 +1,4 @@
+import type { ApiErrorKind } from '@/lib/api-client';
 import {
   HEIGHTS_MM,
   FENCE_COLORS,
@@ -30,3 +31,10 @@ export const COLOR_OPTIONS = FENCE_COLORS.map((color) => ({
   value: color,
   label: COLOR_LABELS[color],
 }));
+
+export const API_ERROR_TITLES: Record<ApiErrorKind, string> = {
+  network: 'Sem conexão com o servidor',
+  validation: 'Dados inválidos',
+  conflict: 'Conflito ao salvar',
+  server: 'Erro no servidor',
+};

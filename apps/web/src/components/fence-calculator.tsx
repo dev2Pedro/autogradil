@@ -22,20 +22,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError, calculate, createOrder, toApiError } from '@/lib/api-client';
-import { COLOR_LABELS, formatMeters } from '@/lib/labels';
+import { type ApiError, calculate, createOrder, toApiError } from '@/lib/api-client';
+import { API_ERROR_TITLES, COLOR_LABELS, formatMeters } from '@/lib/labels';
 
 type CalculationResult = {
   calculation: FenceCalculation;
   input: CalculateInput;
   clientRequestId: string;
-};
-
-const ERROR_TITLES: Record<ApiError['kind'], string> = {
-  network: 'Sem conexão com o servidor',
-  validation: 'Dados inválidos',
-  conflict: 'Conflito ao salvar',
-  server: 'Erro no servidor',
 };
 
 export function FenceCalculator() {
@@ -84,7 +77,7 @@ export function FenceCalculator() {
       setDialogOpen(false);
     } catch (error) {
       const apiError = toApiError(error);
-      toast.error(ERROR_TITLES[apiError.kind], { description: apiError.message });
+      toast.error(API_ERROR_TITLES[apiError.kind], { description: apiError.message });
     } finally {
       confirmLock.current = false;
       setConfirming(false);
@@ -117,7 +110,7 @@ export function FenceCalculator() {
       {calculationError && (
         <Alert variant="destructive">
           <CircleAlertIcon />
-          <AlertTitle>{ERROR_TITLES[calculationError.kind]}</AlertTitle>
+          <AlertTitle>{API_ERROR_TITLES[calculationError.kind]}</AlertTitle>
           <AlertDescription>{calculationError.message}</AlertDescription>
         </Alert>
       )}
