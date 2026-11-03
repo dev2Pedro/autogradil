@@ -6,7 +6,7 @@ import {
   type Order,
   type OrderListItem,
 } from '@autogradil/shared';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, type Order as OrderRecord } from 'src/generated/prisma/client';
 
@@ -52,6 +52,20 @@ export class OrdersService {
         throw new ConflictException({
           code: 'CONFLICT',
           message: 'Este clientRequestId já foi usado em um pedido com outros dados.',
+        });
+      }
+      throw error;
+    }
+  }
+
+  async remove(id: number): Promise<void> {
+    try {
+      await this.prismaService.order.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException({
+          code: 'NOT_FOUND',
+          message: `Pedido nº ${id} não encontrado.`,
         });
       }
       throw error;

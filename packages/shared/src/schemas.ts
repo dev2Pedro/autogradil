@@ -27,6 +27,16 @@ export const createOrderInputSchema = calculateInputSchema.extend({
   clientRequestId: z.uuid({ error: 'Identificador da requisição inválido.' }),
 });
 
+const ORDER_ID_MESSAGE = 'Identificador do pedido inválido.';
+
+export const orderIdParamsSchema = z.object({
+  id: z.coerce
+    .number({ error: ORDER_ID_MESSAGE })
+    .int(ORDER_ID_MESSAGE)
+    .positive(ORDER_ID_MESSAGE)
+    .max(Number.MAX_SAFE_INTEGER, ORDER_ID_MESSAGE),
+});
+
 export const apiErrorBodySchema = z.object({
   error: z.object({
     code: z.string(),

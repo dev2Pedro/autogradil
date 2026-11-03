@@ -1,9 +1,15 @@
 import type { z } from 'zod';
 import type { FenceColor, HeightMm } from './constants';
-import type { apiErrorBodySchema, calculateInputSchema, createOrderInputSchema } from './schemas';
+import type {
+  apiErrorBodySchema,
+  calculateInputSchema,
+  createOrderInputSchema,
+  orderIdParamsSchema,
+} from './schemas';
 
 export type CalculateInput = z.infer<typeof calculateInputSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
+export type OrderIdParams = z.infer<typeof orderIdParamsSchema>;
 
 export interface CalculateFenceInput {
   lengthMm: number;

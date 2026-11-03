@@ -3,6 +3,7 @@ import {
   apiErrorBodySchema,
   calculateInputSchema,
   createOrderInputSchema,
+  orderIdParamsSchema,
   type CalculateInput,
   type CreateOrderInput,
   type FenceCalculation,
@@ -10,7 +11,7 @@ import {
   type OrderListItem,
 } from '@autogradil/shared';
 
-export type ApiErrorKind = 'network' | 'validation' | 'conflict' | 'server';
+export type ApiErrorKind = 'network' | 'validation' | 'not_found' | 'conflict' | 'server';
 
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
@@ -42,6 +43,7 @@ const http = axios.create({
 
 function kindFor(status: number, code: string): ApiErrorKind {
   if (code === 'VALIDATION_ERROR') return 'validation';
+  if (status === 404) return 'not_found';
   if (status === 409) return 'conflict';
   return 'server';
 }
@@ -102,4 +104,9 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
 
 export async function listOrders(): Promise<OrderListItem[]> {
   return request(() => http.get<OrderListItem[]>('/orders'));
+}
+
+export async function deleteOrder(id: number): Promise<void> {
+  const params = orderIdParamsSchema.parse({ id });
+  await request(() => http.delete<void>(`/orders/${params.id}`));
 }

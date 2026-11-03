@@ -47,6 +47,10 @@ describe('/api/orders', () => {
     return request(app.getHttpServer()).get('/api/orders');
   }
 
+  function remove(id: number | string) {
+    return request(app.getHttpServer()).delete(`/api/orders/${id}`);
+  }
+
   // Precisa ser o primeiro teste: os demais gravam no mesmo banco.
   it('GET retorna [] quando não há pedidos', async () => {
     const response = await list();
@@ -73,7 +77,12 @@ describe('/api/orders', () => {
 
     const rows = await prisma.order.findMany({ where: { clientRequestId: input.clientRequestId } });
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ id: response.body.id, lengthMm: 6000, heightMm: 1530, color: 'white' });
+    expect(rows[0]).toMatchObject({
+      id: response.body.id,
+      lengthMm: 6000,
+      heightMm: 1530,
+      color: 'white',
+    });
   });
 
   it('retorna 200 com o pedido existente ao repetir o mesmo payload', async () => {
@@ -149,6 +158,44 @@ describe('/api/orders', () => {
         differenceMm: 1500,
         components: { panels: 3, posts: 4, fasteners: 12, screws: 16 },
       },
+    });
+  });
+
+  it('DELETE remove o pedido com 204 e ele some da listagem', async () => {
+    const created = (await post(orderInput())).body;
+
+    const response = await remove(created.id);
+    const ids = (await list()).body.map((order: { id: number }) => order.id);
+
+    expect(response.status).toBe(204);
+    expect(response.body).toEqual({});
+    expect(ids).not.toContain(created.id);
+  });
+
+  it('DELETE retorna 404 para pedido inexistente', async () => {
+    const created = (await post(orderInput())).body;
+    await remove(created.id);
+
+    const response = await remove(created.id);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      error: {
+        code: 'NOT_FOUND',
+        message: `Pedido nº ${created.id} não encontrado.`,
+        fields: {},
+      },
+    });
+  });
+
+  it.each(['abc', '0', '-1', '1.5'])('DELETE retorna 400 para id %s', async (id) => {
+    const response = await remove(id);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toEqual({
+      code: 'VALIDATION_ERROR',
+      message: 'Dados inválidos.',
+      fields: { id: 'Identificador do pedido inválido.' },
     });
   });
 });

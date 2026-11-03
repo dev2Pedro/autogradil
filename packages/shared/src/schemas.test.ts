@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { apiErrorBodySchema, calculateInputSchema, createOrderInputSchema } from './schemas';
+import {
+  apiErrorBodySchema,
+  calculateInputSchema,
+  createOrderInputSchema,
+  orderIdParamsSchema,
+} from './schemas';
 import { MAX_LENGTH_MM, MIN_LENGTH_MM } from './constants';
 
 const VALID_UUID = '3f2b8c1e-6d4a-4b7e-9c2f-1a5d8e7b9c03';
@@ -125,5 +130,27 @@ describe('apiErrorBodySchema', () => {
     ['sem error', { message: 'x' }],
   ])('rejeita corpo %s', (_nome, body) => {
     expect(apiErrorBodySchema.safeParse(body).success).toBe(false);
+  });
+});
+
+describe('orderIdParamsSchema', () => {
+  it.each([
+    ['1', 1],
+    ['42', 42],
+  ])('converte o id %s em número', (id, expected) => {
+    expect(orderIdParamsSchema.safeParse({ id }).data).toEqual({ id: expected });
+  });
+
+  it.each([
+    ['zero', '0'],
+    ['negativo', '-1'],
+    ['decimal', '1.5'],
+    ['texto', 'abc'],
+    ['acima do inteiro seguro', '9007199254740992'],
+  ])('rejeita id %s', (_nome, id) => {
+    const result = orderIdParamsSchema.safeParse({ id });
+
+    expect(result.success).toBe(false);
+    expect(messageFor(result, 'id')).toBe('Identificador do pedido inválido.');
   });
 });
