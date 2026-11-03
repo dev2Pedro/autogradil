@@ -10,8 +10,6 @@ const links = [
   { href: '/history', label: 'Histórico' },
 ];
 
-// Com trailingSlash: true o pathname vem com "/" no final ("/historico/"),
-// então a comparação ignora a barra final.
 function isActive(pathname: string, href: string) {
   const normalize = (p: string) => (p.length > 1 ? p.replace(/\/$/, '') : p);
   return normalize(pathname) === normalize(href);
