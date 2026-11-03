@@ -1,13 +1,31 @@
-import { calculateFence, CreateOrderInput, type HeightMm } from '@autogradil/shared';
+import {
+  calculateFence,
+  type CreateOrderInput,
+  type FenceColor,
+  type HeightMm,
+  type Order,
+  type OrderListItem,
+} from '@autogradil/shared';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, type Order as OrderRecord } from 'src/generated/prisma/client';
+
+function toOrder(record: OrderRecord): Order {
+  return {
+    id: record.id,
+    clientRequestId: record.clientRequestId,
+    lengthMm: record.lengthMm,
+    heightMm: record.heightMm as HeightMm,
+    color: record.color as FenceColor,
+    confirmedAt: record.confirmedAt.toISOString(),
+  };
+}
 
 @Injectable()
 export class OrdersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(input: CreateOrderInput) {
+  async create(input: CreateOrderInput): Promise<{ order: Order; created: boolean }> {
     try {
       const order = await this.prismaService.order.create({
         data: {
@@ -17,7 +35,7 @@ export class OrdersService {
           clientRequestId: input.clientRequestId,
         },
       });
-      return { order, created: true };
+      return { order: toOrder(order), created: true };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         const existing = await this.prismaService.order.findUnique({
@@ -29,7 +47,7 @@ export class OrdersService {
           existing.heightMm === input.heightMm &&
           existing.color === input.color;
 
-        if (samePayload) return { order: existing, created: false };
+        if (samePayload) return { order: toOrder(existing), created: false };
 
         throw new ConflictException({
           code: 'CONFLICT',
@@ -40,16 +58,14 @@ export class OrdersService {
     }
   }
 
-  async list() {
-    const orders = await this.prismaService.order.findMany({
+  async list(): Promise<OrderListItem[]> {
+    const records = await this.prismaService.order.findMany({
       orderBy: [{ confirmedAt: 'desc' }, { id: 'desc' }],
     });
 
-    return orders.map(({ id, lengthMm, heightMm, color, confirmedAt }) => {
-      const { soldLengthMm, differenceMm, components } = calculateFence({
-        lengthMm,
-        heightMm: heightMm as HeightMm,
-      });
+    return records.map((record) => {
+      const { id, lengthMm, heightMm, color, confirmedAt } = toOrder(record);
+      const { soldLengthMm, differenceMm, components } = calculateFence({ lengthMm, heightMm });
 
       return {
         id,
