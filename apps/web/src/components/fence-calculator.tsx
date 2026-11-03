@@ -7,7 +7,7 @@ import type { CalculateInput, FenceCalculation } from '@autogradil/shared';
 import { FenceForm } from '@/components/fence-form';
 import { ResultSummary } from '@/components/result-summary';
 import { ComponentsTable } from '@/components/components-table';
-import { FenceSketch } from '@/components/fence-sketch';
+import { FenceViews } from '@/components/fence-views';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -132,7 +132,7 @@ export function FenceCalculator() {
             <ComponentsTable components={result.calculation.components} />
           </div>
 
-          <FenceSketch
+          <FenceViews
             panels={result.calculation.components.panels}
             posts={result.calculation.components.posts}
             heightMm={result.calculation.heightMm}

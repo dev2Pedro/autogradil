@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 import { HEIGHTS_MM, type FenceColor, type HeightMm } from '@autogradil/shared';
+import { FILL_BY_COLOR, HATCH_BY_COLOR } from '@/lib/fence-colors';
 import { formatMeters } from '@/lib/labels';
 
 const PANEL_WIDTH = 48;
@@ -13,20 +14,6 @@ const TOP = 28;
 const PADDING = 8;
 const FULL_LIMIT = 200;
 const EDGE_PANELS = 100;
-
-const FILL_BY_COLOR: Record<FenceColor, string> = {
-  none: '#a1a1aa',
-  white: '#ffffff',
-  black: '#18181b',
-  green: '#15803d',
-};
-
-const HATCH_BY_COLOR: Record<FenceColor, string> = {
-  none: '#52525b',
-  white: '#71717a',
-  black: '#a1a1aa',
-  green: '#bbf7d0',
-};
 
 const panelFormat = new Intl.NumberFormat('pt-BR');
 
