@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { HeightMm } from './constants';
-import type { calculateInputSchema, createOrderInputSchema } from './schemas';
+import type { FenceColor, HeightMm } from './constants';
+import type { apiErrorBodySchema, calculateInputSchema, createOrderInputSchema } from './schemas';
 
 export type CalculateInput = z.infer<typeof calculateInputSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
@@ -24,3 +24,24 @@ export interface FenceCalculation {
   heightMm: HeightMm;
   components: FenceComponents;
 }
+
+export interface OrderSummary {
+  soldLengthMm: number;
+  differenceMm: number;
+  components: FenceComponents;
+}
+
+export interface Order {
+  id: number;
+  clientRequestId: string;
+  lengthMm: number;
+  heightMm: HeightMm;
+  color: FenceColor;
+  confirmedAt: string;
+}
+
+export interface OrderListItem extends Omit<Order, 'clientRequestId'> {
+  summary: OrderSummary;
+}
+
+export type ApiErrorBody = z.infer<typeof apiErrorBodySchema>;

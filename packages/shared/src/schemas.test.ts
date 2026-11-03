@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateInputSchema, createOrderInputSchema } from './schemas';
+import { apiErrorBodySchema, calculateInputSchema, createOrderInputSchema } from './schemas';
 import { MAX_LENGTH_MM, MIN_LENGTH_MM } from './constants';
 
 const VALID_UUID = '3f2b8c1e-6d4a-4b7e-9c2f-1a5d8e7b9c03';
@@ -101,5 +101,29 @@ describe('createOrderInputSchema', () => {
 
     expect(result.success).toBe(false);
     expect(messageFor(result, 'lengthMm')).toBe(LENGTH_MESSAGE);
+  });
+});
+
+describe('apiErrorBodySchema', () => {
+  it('aceita o corpo de erro padrão da API', () => {
+    const body = {
+      error: { code: 'VALIDATION_ERROR', message: 'Dados inválidos.', fields: { lengthMm: 'x' } },
+    };
+
+    expect(apiErrorBodySchema.safeParse(body).data).toEqual(body);
+  });
+
+  it('usa fields vazio quando ausente', () => {
+    const result = apiErrorBodySchema.safeParse({ error: { code: 'X', message: 'y' } });
+
+    expect(result.data?.error.fields).toEqual({});
+  });
+
+  it.each([
+    ['html', '<html></html>'],
+    ['nulo', null],
+    ['sem error', { message: 'x' }],
+  ])('rejeita corpo %s', (_nome, body) => {
+    expect(apiErrorBodySchema.safeParse(body).success).toBe(false);
   });
 });

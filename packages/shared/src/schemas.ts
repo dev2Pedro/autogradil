@@ -26,3 +26,11 @@ export const calculateInputSchema = z.object({
 export const createOrderInputSchema = calculateInputSchema.extend({
   clientRequestId: z.uuid({ error: 'Identificador da requisição inválido.' }),
 });
+
+export const apiErrorBodySchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+    fields: z.record(z.string(), z.string()).default({}),
+  }),
+});
