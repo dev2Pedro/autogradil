@@ -6,7 +6,6 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "predev": "npm run build -w @autogradil/shared",
     "dev": "nest start --watch",
     "prebuild": "npm run build -w @autogradil/shared",
     "build": "nest build",
