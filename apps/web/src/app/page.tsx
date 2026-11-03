@@ -1,5 +1,5 @@
-'use client';
+import { FenceCalculator } from '@/components/fence-calculator';
 
 export default function CalculadoraPage() {
-  return <h1 className="text-2xl font-semibold">Calculadora</h1>;
+  return <FenceCalculator />;
 }
