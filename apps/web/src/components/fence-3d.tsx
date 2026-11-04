@@ -167,7 +167,7 @@ export function Fence3D({
         key={`${panels}-${heightMm}`}
         frameloop="demand"
         dpr={[1, 2]}
-        shadows
+        shadows="percentage"
         camera={{
           position: initialFraming.position,
           fov: FIELD_OF_VIEW,
