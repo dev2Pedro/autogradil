@@ -4,7 +4,7 @@ import { MAX_LENGTH_MM, MIN_LENGTH_MM } from './constants';
 
 describe('parseMetersToMm', () => {
   it('should convert meters to millimeters', () => {
-    expect(parseMetersToMm('6,5')).toBe(6500);
+    expect(parseMetersToMm('6,5')).toEqual({ ok: true, lengthMm: 6500 });
   });
 
   it.each([
@@ -20,30 +20,30 @@ describe('parseMetersToMm', () => {
     ['10.000', 10000],
     ['  6,5  ', 6500],
   ])('converte %j para %i mm', (input, expected) => {
-    expect(parseMetersToMm(input)).toBe(expected);
+    expect(parseMetersToMm(input)).toEqual({ ok: true, lengthMm: expected });
   });
 
   it.each([
-    ['vazio', ''],
-    ['só espaços', '   '],
-    ['texto', 'abc'],
-    ['texto após o número', '6,5abc'],
-    ['notação científica', '1e3'],
-    ['negativo', '-1'],
-    ['negativo decimal', '-0,5'],
-    ['sinal positivo', '+6'],
-    ['zero', '0'],
-    ['zero com decimais', '0,000'],
-    ['4 casas decimais', '2,5005'],
-    ['acima do limite', '10000,001'],
-    ['ponto e vírgula juntos', '10.000,001'],
-    ['dois separadores iguais', '1,2,3'],
-    ['vírgula sem decimais', '6,'],
-    ['vírgula sem inteiro', ',5'],
-    ['espaço no meio', '6 5'],
-    ['número gigante', '99999999999999999999'],
-  ])('rejeita %s', (_nome, input) => {
-    expect(parseMetersToMm(input)).toBeNull();
+    ['vazio', '', 'empty'],
+    ['só espaços', '   ', 'empty'],
+    ['texto', 'abc', 'format'],
+    ['texto após o número', '6,5abc', 'format'],
+    ['notação científica', '1e3', 'format'],
+    ['negativo', '-1', 'format'],
+    ['negativo decimal', '-0,5', 'format'],
+    ['sinal positivo', '+6', 'format'],
+    ['zero', '0', 'range'],
+    ['zero com decimais', '0,000', 'range'],
+    ['4 casas decimais', '2,5005', 'decimals'],
+    ['acima do limite', '10000,001', 'range'],
+    ['ponto e vírgula juntos', '10.000,001', 'format'],
+    ['dois separadores iguais', '1,2,3', 'format'],
+    ['vírgula sem decimais', '6,', 'format'],
+    ['vírgula sem inteiro', ',5', 'format'],
+    ['espaço no meio', '6 5', 'format'],
+    ['número gigante', '99999999999999999999', 'range'],
+  ] as const)('rejeita %s', (_nome, input, error) => {
+    expect(parseMetersToMm(input)).toEqual({ ok: false, error });
   });
 });
 
@@ -75,7 +75,7 @@ describe('ida e volta', () => {
   it.each([MIN_LENGTH_MM, 500, 1375, 2030, 2500, 6500, 10000, MAX_LENGTH_MM])(
     'parse(format(%i)) devolve o mesmo valor',
     (mm) => {
-      expect(parseMetersToMm(formatMmToMeters(mm))).toBe(mm);
+      expect(parseMetersToMm(formatMmToMeters(mm))).toEqual({ ok: true, lengthMm: mm });
     },
   );
 });

@@ -4,6 +4,7 @@ import {
   calculateInputSchema,
   createOrderInputSchema,
   orderIdParamsSchema,
+  orderListItemSchema,
 } from './schemas';
 import { MAX_LENGTH_MM, MIN_LENGTH_MM } from './constants';
 
@@ -152,5 +153,42 @@ describe('orderIdParamsSchema', () => {
 
     expect(result.success).toBe(false);
     expect(messageFor(result, 'id')).toBe('Identificador do pedido inválido.');
+  });
+});
+
+describe('orderListItemSchema', () => {
+  const item = {
+    id: 1,
+    lengthMm: 6000,
+    heightMm: 1530,
+    color: 'white',
+    confirmedAt: '2026-11-04T12:00:00.000Z',
+    summary: {
+      soldLengthMm: 7500,
+      differenceMm: 1500,
+      components: { panels: 3, posts: 4, fasteners: 12, screws: 16 },
+    },
+  };
+
+  it('aceita um pedido válido', () => {
+    expect(orderListItemSchema.safeParse(item).success).toBe(true);
+  });
+
+  it.each([
+    ['altura fora da tabela', { ...item, heightMm: 1500 }],
+    ['cor desconhecida', { ...item, color: 'blue' }],
+    ['data inválida', { ...item, confirmedAt: 'ontem' }],
+    [
+      'quantidade NaN',
+      {
+        ...item,
+        summary: {
+          ...item.summary,
+          components: { ...item.summary.components, fasteners: Number.NaN },
+        },
+      },
+    ],
+  ])('rejeita %s', (_nome, value) => {
+    expect(orderListItemSchema.safeParse(value).success).toBe(false);
   });
 });

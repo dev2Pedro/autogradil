@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { calculateFence } from './fence-calculator';
 import { parseMetersToMm } from './length-conversion';
 import { HEIGHTS_MM, type HeightMm } from './constants';
+import { lengthMmSchema } from './schemas';
+
+const mm = (value: number) => lengthMmSchema.parse(value);
 
 function calculate(lengthMeters: string, heightMm: HeightMm) {
-  const lengthMm = parseMetersToMm(lengthMeters);
-  if (lengthMm === null) {
+  const parsed = parseMetersToMm(lengthMeters);
+  if (!parsed.ok) {
     throw new Error(`comprimento inválido no teste: ${lengthMeters}`);
   }
-  return calculateFence({ lengthMm, heightMm });
+  return calculateFence({ lengthMm: parsed.lengthMm, heightMm });
 }
 
 describe('calculateFence', () => {
@@ -34,7 +37,7 @@ describe('calculateFence', () => {
   );
 
   it('devolve o comprimento solicitado e a altura recebidos', () => {
-    expect(calculateFence({ lengthMm: 6000, heightMm: 1530 })).toMatchObject({
+    expect(calculateFence({ lengthMm: mm(6000), heightMm: 1530 })).toMatchObject({
       requestedLengthMm: 6000,
       heightMm: 1530,
     });
@@ -43,7 +46,7 @@ describe('calculateFence', () => {
   it('nunca vende menos do que o solicitado', () => {
     for (const heightMm of HEIGHTS_MM) {
       for (let lengthMm = 1; lengthMm <= 12_500; lengthMm += 37) {
-        const result = calculateFence({ lengthMm, heightMm });
+        const result = calculateFence({ lengthMm: mm(lengthMm), heightMm });
 
         expect(result.soldLengthMm).toBeGreaterThanOrEqual(lengthMm);
         expect(result.differenceMm).toBeLessThan(2500);
@@ -53,7 +56,7 @@ describe('calculateFence', () => {
   });
 
   it('não altera a entrada', () => {
-    const input = Object.freeze({ lengthMm: 6000, heightMm: 1530 as HeightMm });
+    const input = Object.freeze({ lengthMm: mm(6000), heightMm: 1530 as HeightMm });
 
     expect(() => calculateFence(input)).not.toThrow();
   });

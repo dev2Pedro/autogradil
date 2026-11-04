@@ -1,20 +1,20 @@
-import { MIN_LENGTH_MM, MAX_LENGTH_MM } from './constants';
+import { lengthMmSchema } from './schemas';
+import type { ParseMetersResult } from './types';
 
+const NUMBER_PATTERN = /^\d+(?:[.,]\d+)?$/;
 const METERS_PATTERN = /^\d+(?:[.,]\d{1,3})?$/;
 
-export function parseMetersToMm(input: string): number | null {
-  const normalizado = input.trim();
-  if (!METERS_PATTERN.test(normalizado)) {
-    return null;
-  }
+export function parseMetersToMm(input: string): ParseMetersResult {
+  const value = input.trim();
 
-  const [inteira, decimal = ''] = normalizado.replace(',', '.').split('.');
-  const mm = Number(inteira) * 1000 + Number(decimal.padEnd(3, '0'));
+  if (value === '') return { ok: false, error: 'empty' };
+  if (!NUMBER_PATTERN.test(value)) return { ok: false, error: 'format' };
+  if (!METERS_PATTERN.test(value)) return { ok: false, error: 'decimals' };
 
-  if (mm < MIN_LENGTH_MM || mm > MAX_LENGTH_MM) {
-    return null;
-  }
-  return mm;
+  const [integer, decimal = ''] = value.replace(',', '.').split('.');
+  const parsed = lengthMmSchema.safeParse(Number(integer) * 1000 + Number(decimal.padEnd(3, '0')));
+
+  return parsed.success ? { ok: true, lengthMm: parsed.data } : { ok: false, error: 'range' };
 }
 
 export function formatMmToMeters(mm: number): string {

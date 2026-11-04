@@ -1,8 +1,7 @@
 import {
   calculateFence,
+  orderSchema,
   type CreateOrderInput,
-  type FenceColor,
-  type HeightMm,
   type Order,
   type OrderListItem,
 } from '@autogradil/shared';
@@ -11,14 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, type Order as OrderRecord } from 'src/generated/prisma/client';
 
 function toOrder(record: OrderRecord): Order {
-  return {
-    id: record.id,
-    clientRequestId: record.clientRequestId,
-    lengthMm: record.lengthMm,
-    heightMm: record.heightMm as HeightMm,
-    color: record.color as FenceColor,
-    confirmedAt: record.confirmedAt.toISOString(),
-  };
+  return orderSchema.parse({ ...record, confirmedAt: record.confirmedAt.toISOString() });
 }
 
 @Injectable()

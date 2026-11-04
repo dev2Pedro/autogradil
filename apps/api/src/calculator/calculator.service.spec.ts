@@ -1,3 +1,4 @@
+import { lengthMmSchema } from '@autogradil/shared';
 import { CalculatorService } from './calculator.service';
 
 describe('CalculatorService', () => {
@@ -6,7 +7,7 @@ describe('CalculatorService', () => {
   it('arredonda o comprimento para cima ao múltiplo de uma tela', () => {
     expect(
       service.calculate({
-        lengthMm: 6500,
+        lengthMm: lengthMmSchema.parse(6500),
         heightMm: 1530,
         color: 'white',
       }),
@@ -25,9 +26,13 @@ describe('CalculatorService', () => {
   });
 
   it('não gera diferença quando o comprimento é múltiplo exato de uma tela', () => {
-    const result = service.calculate({ lengthMm: 5000, heightMm: 1030, color: 'none' });
+    const result = service.calculate({
+      lengthMm: lengthMmSchema.parse(5000),
+      heightMm: 1030,
+      color: 'none',
+    });
 
     expect(result.differenceMm).toBe(0);
-    expect(result.components).toEqual({ panels: 2, posts: 3, fasteners: 6, screws: 12 })
-  })
+    expect(result.components).toEqual({ panels: 2, posts: 3, fasteners: 6, screws: 12 });
+  });
 });
