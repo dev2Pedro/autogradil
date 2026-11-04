@@ -77,7 +77,7 @@ function ColorFilter({ orders, value, onChange }: ColorFilterProps) {
     <div
       role="group"
       aria-label="Filtrar por cor"
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
     >
       <button
         type="button"
@@ -134,17 +134,17 @@ function OrderRow({ order, longestMm, onOpen }: OrderRowProps) {
             onClick={onOpen}
             className="flex items-baseline gap-1 rounded-sm text-left outline-none after:absolute after:inset-0 after:rounded-md after:content-[''] focus-visible:after:ring-3 focus-visible:after:ring-ring/40"
           >
-            <span className="text-base font-medium text-muted-foreground [font-stretch:80%]">
+            <span className="text-base font-medium text-muted-foreground font-stretch-80%">
               <span className="sr-only">Pedido </span>nº{' '}
             </span>
-            <span className="text-3xl leading-none font-semibold tracking-[-0.02em] [font-stretch:82%]">
+            <span className="text-3xl leading-none font-semibold tracking-[-0.02em] font-stretch-82%">
               {formatOrderNumber(order.id)}
             </span>
           </button>
         </h2>
 
         <div className="col-start-2 text-right sm:col-start-4 sm:row-start-1">
-          <p className="text-2xl leading-none font-semibold tracking-[-0.02em] [font-stretch:85%]">
+          <p className="text-2xl leading-none font-semibold tracking-[-0.02em] font-stretch-85%">
             {formatMeters(summary.soldLengthMm)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -301,7 +301,7 @@ export function OrderHistory() {
     <div className="space-y-8">
       <header className="flex items-end justify-between gap-x-6">
         <div className="space-y-1.5">
-          <h1 className="text-4xl leading-none font-semibold tracking-[-0.025em] [font-stretch:88%]">
+          <h1 className="text-4xl leading-none font-semibold tracking-tight font-stretch-88%">
             Pedidos
           </h1>
           <p className="text-sm text-muted-foreground" aria-live="polite">

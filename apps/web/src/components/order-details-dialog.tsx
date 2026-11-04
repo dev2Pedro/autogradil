@@ -120,7 +120,7 @@ function Cell({
 }) {
   return (
     <div className={cn('border-r border-b border-foreground/55 px-3 py-2', className)}>
-      <dt className="text-xs text-muted-foreground [font-stretch:80%]">{label}</dt>
+      <dt className="text-xs text-muted-foreground font-stretch-80%">{label}</dt>
       <dd className="mt-0.5 font-semibold">{children}</dd>
     </div>
   );
@@ -185,7 +185,7 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
                 />
                 <FenceElevation
                   {...elevation}
-                  className="mx-auto hidden h-auto max-h-[24rem] w-full sm:block"
+                  className="mx-auto hidden h-auto max-h-96 w-full sm:block"
                 />
                 <figcaption className="text-xs text-muted-foreground">
                   Vista frontal, sem escala.
@@ -209,14 +209,14 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
 
           <section
             aria-label="Carimbo do pedido"
-            className="order-first space-y-2 px-5 pt-14 pb-6 sm:px-7 lg:order-none lg:col-start-2 lg:row-start-1"
+            className="order-first space-y-2 px-5 pt-14 pb-6 sm:px-7 lg:order-0 lg:col-start-2 lg:row-start-1"
           >
             <dl className="grid grid-cols-2 border-t border-l border-foreground/55">
               <Cell label="Pedido" className="col-span-2">
                 <DialogTitle
                   ref={titleRef}
                   tabIndex={-1}
-                  className="text-3xl leading-none font-semibold tracking-[-0.02em] outline-none [font-stretch:82%]"
+                  className="text-3xl leading-none font-semibold tracking-[-0.02em] outline-none font-stretch-82%"
                 >
                   <span className="sr-only">Pedido </span>nº {formatOrderNumber(order.id)}
                 </DialogTitle>
@@ -239,12 +239,12 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
                 </span>
               </Cell>
               <Cell label="Vendido">
-                <span className="text-2xl leading-tight tracking-[-0.02em] [font-stretch:85%]">
+                <span className="text-2xl leading-tight tracking-[-0.02em] font-stretch-85%">
                   {formatMeters(summary.soldLengthMm)}
                 </span>
               </Cell>
               <Cell label="Solicitado">
-                <span className="text-2xl leading-tight font-medium tracking-[-0.02em] text-muted-foreground [font-stretch:85%]">
+                <span className="text-2xl leading-tight font-medium tracking-[-0.02em] text-muted-foreground font-stretch-85%">
                   {formatMeters(order.lengthMm)}
                 </span>
               </Cell>
@@ -270,9 +270,9 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
                 <li key={row.key} className="flex items-center justify-between gap-4 py-2.5">
                   <div>
                     <p className="font-medium">{row.label}</p>
-                    <p className="text-xs text-muted-foreground [font-stretch:85%]">{row.rule}</p>
+                    <p className="text-xs text-muted-foreground font-stretch-85%">{row.rule}</p>
                   </div>
-                  <p className="text-2xl font-semibold tabular-nums [font-stretch:85%]">
+                  <p className="text-2xl font-semibold tabular-nums font-stretch-85%">
                     {formatQuantity(summary.components[row.key])}
                   </p>
                 </li>
