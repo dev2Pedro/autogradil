@@ -1,146 +1,164 @@
 'use client';
 
-import { type ComponentRef, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import {
-  CanvasTexture,
-  DoubleSide,
-  type InstancedMesh,
-  LinearMipmapLinearFilter,
-  Object3D,
-  RepeatWrapping,
-  TOUCH,
-} from 'three';
+import { type ComponentRef, type RefObject, useLayoutEffect, useRef, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Environment, Lightformer, OrbitControls } from '@react-three/drei';
+import { type DirectionalLight, PerspectiveCamera, TOUCH } from 'three';
 import { LockIcon, Move3dIcon, RotateCcwIcon } from 'lucide-react';
-import { PANEL_LENGTH_MM, type FenceColor, type HeightMm } from '@autogradil/shared';
+import { FASTENERS_BY_HEIGHT_MM, type FenceColor, type HeightMm } from '@autogradil/shared';
 import { Button } from '@/components/ui/button';
-import { POST_BY_COLOR } from '@/lib/fence-colors';
+import { Clips, DetailedPanels, FarPanels, Ground, Posts } from '@/components/fence-3d-parts';
+import { PAINT_BY_COLOR } from '@/lib/fence-colors';
+import { PANEL_LENGTH } from '@/lib/fence-3d-geometry';
+import { FIELD_OF_VIEW, frameFence } from '@/lib/fence-3d-framing';
 import { cn } from '@/lib/utils';
 
-const PANEL_LENGTH = PANEL_LENGTH_MM / 1000;
-const POST_SIZE = 0.06;
-const POST_EXTRA = 0.1;
-const PANEL_LIFT = 0.03;
-const WIRE_SPACING_X = 0.05;
-const WIRE_SPACING_Y = 0.2;
-const INITIAL_VIEW = 15;
+const INITIAL_VIEW = 12.5;
+const DEFAULT_HEIGHT_CLASS = 'h-72 sm:h-96';
+const DETAIL_PANEL_LIMIT = 60;
+const SHADOW_MAP_SIZE = 2048;
+const SHADOW_INTENSITY = 0.6;
+const SHADOW_MARGIN = 4;
 
 type Fence3DProps = {
   panels: number;
   posts: number;
   heightMm: HeightMm;
   color: FenceColor;
+  className?: string;
 };
 
-function createMeshTexture(panelWidth: number, height: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 128;
-  const context = canvas.getContext('2d');
-  if (context) {
-    context.fillStyle = '#1a1a1a';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, 10, canvas.height);
-    context.fillRect(0, 0, canvas.width, 8);
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.minFilter = LinearMipmapLinearFilter;
-  texture.anisotropy = 8;
-  texture.repeat.set(panelWidth / WIRE_SPACING_X, height / WIRE_SPACING_Y);
-  return texture;
-}
+type ControlsRef = RefObject<ComponentRef<typeof OrbitControls> | null>;
 
-function Posts({ count, height, color }: { count: number; height: number; color: string }) {
-  const ref = useRef<InstancedMesh>(null);
-  const postHeight = height + POST_EXTRA;
+type CameraRigProps = {
+  view: number;
+  heightM: number;
+  controlsRef: ControlsRef;
+  recenterRef: RefObject<(() => void) | null>;
+};
+
+function CameraRig({ view, heightM, controlsRef, recenterRef }: CameraRigProps) {
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
+  const invalidate = useThree((state) => state.invalidate);
+  const fov = camera instanceof PerspectiveCamera ? camera.fov : FIELD_OF_VIEW;
+  const aspect = size.width / Math.max(size.height, 1);
 
   useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const dummy = new Object3D();
-    for (let index = 0; index < count; index++) {
-      dummy.position.set(index * PANEL_LENGTH, postHeight / 2, 0);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(index, dummy.matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-  }, [count, postHeight]);
+    const frame = () => {
+      const { position, target } = frameFence({ view, heightM, aspect, fov });
+      camera.position.set(...position);
+      camera.lookAt(...target);
+      const controls = controlsRef.current;
+      if (controls) {
+        controls.target.set(...target);
+        controls.update();
+      }
+      invalidate();
+    };
+
+    frame();
+    recenterRef.current = frame;
+    return () => {
+      recenterRef.current = null;
+    };
+  }, [camera, controlsRef, recenterRef, view, heightM, aspect, fov, invalidate]);
+
+  return null;
+}
+
+function KeyLight({ center, extent }: { center: number; extent: number }) {
+  const ref = useRef<DirectionalLight>(null);
+
+  useLayoutEffect(() => {
+    const light = ref.current;
+    if (!light) return;
+    light.target.position.set(center, 0, 0);
+    light.target.updateMatrixWorld();
+  }, [center]);
 
   return (
-    <instancedMesh key={count} ref={ref} args={[undefined, undefined, count]}>
-      <boxGeometry args={[POST_SIZE, postHeight, POST_SIZE]} />
-      <meshStandardMaterial color={color} metalness={0.4} roughness={0.5} />
-    </instancedMesh>
+    <directionalLight
+      ref={ref}
+      position={[center + 5, 11, -6]}
+      intensity={2.4}
+      castShadow
+      shadow-mapSize={[SHADOW_MAP_SIZE, SHADOW_MAP_SIZE]}
+      shadow-camera-left={-extent}
+      shadow-camera-right={extent}
+      shadow-camera-top={extent}
+      shadow-camera-bottom={-extent}
+      shadow-camera-near={1}
+      shadow-camera-far={40}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.01}
+      shadow-intensity={SHADOW_INTENSITY}
+    />
   );
 }
 
-function Panels({ count, height, color }: { count: number; height: number; color: string }) {
-  const ref = useRef<InstancedMesh>(null);
-  const panelWidth = PANEL_LENGTH - POST_SIZE;
-  const texture = useMemo(() => createMeshTexture(panelWidth, height), [panelWidth, height]);
-
-  useLayoutEffect(() => () => texture.dispose(), [texture]);
-
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const dummy = new Object3D();
-    for (let index = 0; index < count; index++) {
-      dummy.position.set(index * PANEL_LENGTH + PANEL_LENGTH / 2, height / 2 + PANEL_LIFT, 0);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(index, dummy.matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-  }, [count, height]);
-
+function StudioEnvironment() {
   return (
-    <instancedMesh key={count} ref={ref} args={[undefined, undefined, count]}>
-      <planeGeometry args={[panelWidth, height]} />
-      <meshStandardMaterial
-        color={color}
-        alphaMap={texture}
-        transparent
-        depthWrite={false}
-        side={DoubleSide}
-        metalness={0.4}
-        roughness={0.5}
+    <Environment resolution={256} environmentIntensity={1.1}>
+      <Lightformer
+        form="rect"
+        intensity={2.4}
+        color="#ffffff"
+        position={[0, 9, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[24, 24, 1]}
       />
-    </instancedMesh>
+      <Lightformer
+        form="rect"
+        intensity={1.3}
+        color="#f1f5ff"
+        position={[-9, 3, 7]}
+        rotation={[0, Math.PI / 2.4, 0]}
+        scale={[12, 6, 1]}
+      />
+      <Lightformer
+        form="rect"
+        intensity={1}
+        color="#fff6ea"
+        position={[9, 3, -6]}
+        rotation={[0, -Math.PI / 2.4, 0]}
+        scale={[12, 6, 1]}
+      />
+      <Lightformer
+        form="rect"
+        intensity={0.6}
+        color="#d2d8cd"
+        position={[0, -3, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={[24, 24, 1]}
+      />
+    </Environment>
   );
 }
 
-export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
-  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+export function Fence3D({
+  panels,
+  posts,
+  heightMm,
+  color,
+  className = DEFAULT_HEIGHT_CLASS,
+}: Fence3DProps) {
+  const controlsRef: ControlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const recenterRef = useRef<(() => void) | null>(null);
   const [engaged, setEngaged] = useState(false);
-  const height = heightMm / 1000;
+  const heightM = heightMm / 1000;
   const totalLength = panels * PANEL_LENGTH;
   const view = Math.min(totalLength, INITIAL_VIEW);
-  const target: [number, number, number] = [view / 2, height / 2, 0];
-  const distance = view * 0.75 + 3;
-  const cameraPosition: [number, number, number] = [
-    view / 2 - distance * 0.3,
-    height + distance * 0.2,
-    distance,
-  ];
-  const fill = POST_BY_COLOR[color];
-
-  function recenter() {
-    const controls = controlsRef.current;
-    if (!controls) return;
-    controls.object.position.set(...cameraPosition);
-    controls.target.set(...target);
-    controls.update();
-  }
+  const detailPanels = Math.min(panels, DETAIL_PANEL_LIMIT);
+  const paint = PAINT_BY_COLOR[color];
+  const initialFraming = frameFence({ view, heightM, aspect: 16 / 9, fov: FIELD_OF_VIEW });
 
   return (
     <div
-      className="relative h-72 overflow-hidden bg-linear-to-b from-[#e3e8ec] to-[#f1f3f1] sm:h-96"
+      className={cn(
+        'relative overflow-hidden bg-linear-to-b from-[#e3e8ec] to-[#f1f3f1]',
+        className,
+      )}
       onPointerLeave={(event) => {
         if (event.pointerType === 'mouse') setEngaged(false);
       }}
@@ -149,7 +167,13 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
         key={`${panels}-${heightMm}`}
         frameloop="demand"
         dpr={[1, 2]}
-        camera={{ position: cameraPosition, fov: 45, near: 0.05, far: totalLength + 500 }}
+        shadows
+        camera={{
+          position: initialFraming.position,
+          fov: FIELD_OF_VIEW,
+          near: 0.05,
+          far: totalLength + 500,
+        }}
         aria-label={`Visualização 3D da cerca com ${panels} telas e ${posts} postes`}
         fallback={
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
@@ -157,24 +181,41 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
           </div>
         }
       >
-        <fog attach="fog" args={['#e8ecee', view + 10, view + 140]} />
-        <ambientLight intensity={0.75} />
-        <directionalLight position={[5, 10, 8]} intensity={1.6} />
-        <directionalLight position={[-5, 4, -8]} intensity={0.5} />
-        <mesh rotation-x={-Math.PI / 2} position={[totalLength / 2, 0, 0]}>
-          <planeGeometry args={[totalLength + 400, 400]} />
-          <meshStandardMaterial color="#d9ddda" roughness={1} />
-        </mesh>
-        <Posts count={posts} height={height} color={fill} />
-        <Panels count={panels} height={height} color={fill} />
+        <fog attach="fog" args={['#e8ecee', view + 12, view + 130]} />
+        <StudioEnvironment />
+        <hemisphereLight args={['#ffffff', '#b9beb9', 0.3]} />
+        <KeyLight center={view / 2} extent={view / 2 + SHADOW_MARGIN} />
+        <directionalLight position={[-4, 4, 9]} intensity={0.35} />
+        <Ground panels={panels} />
+        <Posts count={posts} detailCount={detailPanels + 1} height={heightM} paint={paint} />
+        <DetailedPanels count={detailPanels} height={heightM} paint={paint} />
+        <Clips
+          panels={detailPanels}
+          fasteners={FASTENERS_BY_HEIGHT_MM[heightMm]}
+          height={heightM}
+        />
+        {panels > detailPanels && (
+          <FarPanels
+            start={detailPanels}
+            count={panels - detailPanels}
+            height={heightM}
+            paint={paint}
+          />
+        )}
         <OrbitControls
           ref={controlsRef}
           makeDefault
-          target={target}
-          minDistance={1}
+          target={initialFraming.target}
+          minDistance={0.6}
           maxDistance={totalLength + 200}
           maxPolarAngle={Math.PI / 2 - 0.02}
           touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
+        />
+        <CameraRig
+          view={view}
+          heightM={heightM}
+          controlsRef={controlsRef}
+          recenterRef={recenterRef}
         />
       </Canvas>
 
@@ -197,7 +238,12 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
           engaged ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
       >
-        <Button size="sm" variant="secondary" onClick={recenter} tabIndex={engaged ? 0 : -1}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => recenterRef.current?.()}
+          tabIndex={engaged ? 0 : -1}
+        >
           <RotateCcwIcon />
           Recentralizar
         </Button>

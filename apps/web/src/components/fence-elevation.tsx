@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { HEIGHTS_MM, PANEL_LENGTH_MM, type FenceColor, type HeightMm } from '@autogradil/shared';
 import { EDGE_BY_COLOR, POST_BY_COLOR, WIRE_BY_COLOR } from '@/lib/fence-colors';
+import { foldPositions } from '@/lib/fence-folds';
 import { formatMeters, plural } from '@/lib/labels';
 import { cn } from '@/lib/utils';
 
@@ -62,11 +63,6 @@ function layoutPanels(panels: number, variant: Variant) {
     breakX: broken ? lead * PANEL + BREAK_GAP / 2 : null,
     hiddenPanels: broken ? panels - lead - tail : 0,
   };
-}
-
-function foldPositions(heightM: number): number[] {
-  const folds = Math.max(2, Math.round(heightM / 0.5));
-  return Array.from({ length: folds }, (_, i) => (i + 0.5) / folds);
 }
 
 function Tick({ x, y }: { x: number; y: number }) {

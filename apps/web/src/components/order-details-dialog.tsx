@@ -150,7 +150,7 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
         <div className="grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr]">
           <section
             aria-label="Visualização da cerca"
-            className="flex flex-col border-y border-rule/60 bg-sheet lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:border-y-0 lg:border-r"
+            className="flex min-w-0 flex-col border-y border-rule/60 bg-sheet lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:border-y-0 lg:border-r"
           >
             <div
               role="radiogroup"
@@ -196,8 +196,9 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
                 </figcaption>
               </figure>
             ) : (
-              <div className="mt-4">
+              <div className="mt-4 flex min-w-0 flex-1 flex-col">
                 <Fence3D
+                  className="min-h-72 flex-1 sm:min-h-96"
                   panels={summary.components.panels}
                   posts={summary.components.posts}
                   heightMm={order.heightMm}
