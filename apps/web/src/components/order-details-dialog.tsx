@@ -189,7 +189,9 @@ function OrderSheet({ order, titleRef, onDeleted }: OrderSheetProps) {
                 />
                 <figcaption className="text-xs text-muted-foreground">
                   Vista frontal, sem escala.
-                  {summary.components.panels > 3 ? ' O trecho do meio foi encurtado.' : ''}
+                  {summary.components.panels > 3
+                    ? ' Trechos longos são encurtados no meio, com as telas omitidas indicadas na quebra.'
+                    : ''}
                   {summary.differenceMm > 0 ? ' A área hachurada é a sobra da última tela.' : ''}
                 </figcaption>
               </figure>

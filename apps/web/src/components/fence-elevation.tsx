@@ -55,7 +55,13 @@ function layoutPanels(panels: number, variant: Variant) {
     x += PANEL;
   });
 
-  return { slots, broken, width: x, breakX: broken ? lead * PANEL + BREAK_GAP / 2 : null };
+  return {
+    slots,
+    broken,
+    width: x,
+    breakX: broken ? lead * PANEL + BREAK_GAP / 2 : null,
+    hiddenPanels: broken ? panels - lead - tail : 0,
+  };
 }
 
 function foldPositions(heightM: number): number[] {
@@ -78,7 +84,7 @@ export function FenceElevation({
 }: FenceElevationProps) {
   const hatchId = useId();
   const margin = MARGIN[variant];
-  const { slots, broken, width, breakX } = layoutPanels(panels, variant);
+  const { slots, broken, width, breakX, hiddenPanels } = layoutPanels(panels, variant);
   const heightM = heightMm / 1000;
   const h = heightM * SCALE;
   const drawingHeight = variant === 'mini' ? MAX_HEIGHT + POST_EXTRA : h + POST_EXTRA;
@@ -278,6 +284,12 @@ export function FenceElevation({
           >
             {formatMeters(heightMm)}
           </text>
+
+          {broken && breakX !== null && (
+            <text x={margin.left + breakX} y={baseY + 17} textAnchor="middle" stroke="none">
+              +{plural(hiddenPanels, 'tela', 'telas')}
+            </text>
+          )}
 
           {panels > 1 && (
             <g>
