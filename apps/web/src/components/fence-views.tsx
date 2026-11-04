@@ -29,7 +29,9 @@ export function FenceViews(props: FenceViewsProps) {
         <FenceSketch {...props} />
       </TabsContent>
       <TabsContent value="3d">
-        <Fence3D {...props} />
+        <div className="overflow-hidden rounded-xl border">
+          <Fence3D {...props} />
+        </div>
       </TabsContent>
     </Tabs>
   );
