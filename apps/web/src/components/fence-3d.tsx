@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentRef, useLayoutEffect, useMemo, useRef } from 'react';
+import { type ComponentRef, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import {
@@ -10,11 +10,13 @@ import {
   LinearMipmapLinearFilter,
   Object3D,
   RepeatWrapping,
+  TOUCH,
 } from 'three';
-import { RotateCcwIcon } from 'lucide-react';
+import { LockIcon, Move3dIcon, RotateCcwIcon } from 'lucide-react';
 import { PANEL_LENGTH_MM, type FenceColor, type HeightMm } from '@autogradil/shared';
 import { Button } from '@/components/ui/button';
-import { FILL_BY_COLOR } from '@/lib/fence-colors';
+import { POST_BY_COLOR } from '@/lib/fence-colors';
+import { cn } from '@/lib/utils';
 
 const PANEL_LENGTH = PANEL_LENGTH_MM / 1000;
 const POST_SIZE = 0.06;
@@ -115,17 +117,18 @@ function Panels({ count, height, color }: { count: number; height: number; color
 
 export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const [engaged, setEngaged] = useState(false);
   const height = heightMm / 1000;
   const totalLength = panels * PANEL_LENGTH;
   const view = Math.min(totalLength, INITIAL_VIEW);
   const target: [number, number, number] = [view / 2, height / 2, 0];
-  const distance = view * 0.65 + 2;
+  const distance = view * 0.75 + 3;
   const cameraPosition: [number, number, number] = [
     view / 2 - distance * 0.3,
-    height + distance * 0.12,
+    height + distance * 0.2,
     distance,
   ];
-  const fill = FILL_BY_COLOR[color];
+  const fill = POST_BY_COLOR[color];
 
   function recenter() {
     const controls = controlsRef.current;
@@ -136,7 +139,12 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
   }
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-2xl border bg-linear-to-b from-sky-100 to-sky-50 sm:h-96 dark:from-zinc-800 dark:to-zinc-900">
+    <div
+      className="relative h-72 overflow-hidden bg-linear-to-b from-[#e3e8ec] to-[#f1f3f1] sm:h-96"
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') setEngaged(false);
+      }}
+    >
       <Canvas
         key={`${panels}-${heightMm}`}
         frameloop="demand"
@@ -149,12 +157,13 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
           </div>
         }
       >
-        <ambientLight intensity={0.7} />
+        <fog attach="fog" args={['#e8ecee', view + 10, view + 140]} />
+        <ambientLight intensity={0.75} />
         <directionalLight position={[5, 10, 8]} intensity={1.6} />
         <directionalLight position={[-5, 4, -8]} intensity={0.5} />
         <mesh rotation-x={-Math.PI / 2} position={[totalLength / 2, 0, 0]}>
           <planeGeometry args={[totalLength + 400, 400]} />
-          <meshStandardMaterial color="#d6d3d1" roughness={1} />
+          <meshStandardMaterial color="#d9ddda" roughness={1} />
         </mesh>
         <Posts count={posts} height={height} color={fill} />
         <Panels count={panels} height={height} color={fill} />
@@ -165,16 +174,56 @@ export function Fence3D({ panels, posts, heightMm, color }: Fence3DProps) {
           minDistance={1}
           maxDistance={totalLength + 200}
           maxPolarAngle={Math.PI / 2 - 0.02}
+          touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
         />
       </Canvas>
-      <div className="absolute top-2 right-2">
-        <Button size="sm" variant="secondary" onClick={recenter}>
+
+      {!engaged && (
+        <button
+          type="button"
+          onClick={() => setEngaged(true)}
+          className="group/engage absolute inset-0 flex items-end justify-center pb-5 outline-none"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-foreground/85 px-4 py-2 text-sm font-medium text-background shadow-[0_6px_20px_-8px_rgb(0_0_0/0.45)] transition-transform duration-200 group-hover/engage:scale-[1.03] group-focus-visible/engage:ring-3 group-focus-visible/engage:ring-ring/50">
+            <Move3dIcon className="size-4" aria-hidden="true" />
+            Explorar em 3D
+          </span>
+        </button>
+      )}
+
+      <div
+        className={cn(
+          'absolute top-3 right-3 flex gap-2 transition-opacity duration-200',
+          engaged ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
+      >
+        <Button size="sm" variant="secondary" onClick={recenter} tabIndex={engaged ? 0 : -1}>
           <RotateCcwIcon />
           Recentralizar
         </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setEngaged(false)}
+          tabIndex={engaged ? 0 : -1}
+        >
+          <LockIcon />
+          Travar
+        </Button>
       </div>
-      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground">
-        Arraste para girar, role para aproximar, botão direito para mover.
+
+      <p
+        className={cn(
+          'pointer-events-none absolute bottom-3 left-3 rounded-md bg-sheet/90 px-2 py-1 text-xs text-foreground transition-opacity duration-200',
+          engaged ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        <span className="pointer-coarse:hidden">
+          Arraste para girar · role para aproximar · botão direito move
+        </span>
+        <span className="hidden pointer-coarse:inline">
+          Um dedo gira · dois dedos aproximam e movem
+        </span>
       </p>
     </div>
   );
