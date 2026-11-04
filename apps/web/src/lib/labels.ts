@@ -78,6 +78,7 @@ export const COLOR_OPTIONS = FENCE_COLORS.map((color) => ({
 export const API_ERROR_TITLES: Record<ApiErrorKind, string> = {
   network: 'Sem conexão com o servidor',
   validation: 'Dados inválidos',
+  bad_request: 'Requisição inválida',
   not_found: 'Não encontrado',
   conflict: 'Conflito ao salvar',
   server: 'Erro no servidor',

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type ApiError, calculate, createOrder, toApiError } from '@/lib/api-client';
+import { toFormFieldErrors, type FormFieldErrors } from '@/lib/fence-form-schema';
 import { API_ERROR_TITLES, COLOR_LABELS, formatMeters } from '@/lib/labels';
 
 type CalculationResult = {
@@ -44,7 +45,7 @@ export function FenceCalculator() {
     setCalculationError(null);
   }, []);
 
-  async function handleCalculate(input: CalculateInput): Promise<Record<string, string> | void> {
+  async function handleCalculate(input: CalculateInput): Promise<FormFieldErrors> {
     setCalculating(true);
     setCalculationError(null);
     setResult(null);
@@ -52,12 +53,19 @@ export function FenceCalculator() {
     try {
       const calculation = await calculate(input);
       setResult({ calculation, input, clientRequestId: crypto.randomUUID() });
+      return {};
     } catch (error) {
       const apiError = toApiError(error);
-      if (apiError.kind === 'validation' && Object.keys(apiError.fields).length > 0) {
-        return apiError.fields;
+      if (apiError.kind !== 'validation') {
+        setCalculationError(apiError);
+        return {};
       }
-      setCalculationError(apiError);
+
+      const { errors, unmapped } = toFormFieldErrors(apiError.fields);
+      if (unmapped.length > 0 || Object.keys(errors).length === 0) {
+        setCalculationError(apiError);
+      }
+      return errors;
     } finally {
       setCalculating(false);
     }

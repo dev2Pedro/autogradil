@@ -14,17 +14,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  API_FIELD_TO_FORM_FIELD,
   FENCE_FORM_DEFAULTS,
+  FORM_FIELDS,
   fenceFormSchema,
   type FenceFormInput,
   type FenceFormOutput,
+  type FormFieldErrors,
 } from '@/lib/fence-form-schema';
 import { COLOR_OPTIONS, HEIGHT_OPTIONS } from '@/lib/labels';
 
 type FenceFormProps = {
   pending: boolean;
-  onCalculate: (values: FenceFormOutput) => Promise<Record<string, string> | void>;
+  onCalculate: (values: FenceFormOutput) => Promise<FormFieldErrors>;
   onValuesChange: () => void;
 };
 
@@ -41,11 +42,10 @@ export function FenceForm({ pending, onCalculate, onValuesChange }: FenceFormPro
 
   async function handleValid(values: FenceFormOutput) {
     const fieldErrors = await onCalculate(values);
-    if (!fieldErrors) return;
 
-    for (const [apiField, message] of Object.entries(fieldErrors)) {
-      const formField = API_FIELD_TO_FORM_FIELD[apiField];
-      if (formField) form.setError(formField, { type: 'server', message });
+    for (const field of FORM_FIELDS) {
+      const message = fieldErrors[field];
+      if (message) form.setError(field, { type: 'server', message });
     }
   }
 
