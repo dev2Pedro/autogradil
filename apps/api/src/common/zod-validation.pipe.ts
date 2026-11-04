@@ -14,7 +14,7 @@ export class ZodValidationPipe implements PipeTransform {
     const fields: Record<string, string> = {};
 
     for (const issue of result.error.issues) {
-      const campo = issue.path.join('.');
+      const campo = issue.path.join('.') || 'body';
       if (!(campo in fields)) {
         fields[campo] = issue.message;
       }

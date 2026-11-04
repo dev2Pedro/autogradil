@@ -4,14 +4,15 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import type { Env } from './config/env';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
   });
-  const config = app.get(ConfigService);
-  const port = Number(config.get('PORT', '3001'));
-  const corsOrigin = config.get<string>('CORS_ORIGIN');
+  const config = app.get<ConfigService<Env, true>>(ConfigService);
+  const port = config.get('PORT', { infer: true });
+  const corsOrigin = config.get('CORS_ORIGIN', { infer: true });
 
   app.useBodyParser('json', { limit: '10kb' });
   app.setGlobalPrefix('api');
