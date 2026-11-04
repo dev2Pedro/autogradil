@@ -15,16 +15,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { deleteOrder, toApiError } from '@/lib/api-client';
-import { API_ERROR_TITLES } from '@/lib/labels';
+import { API_ERROR_TITLES, formatOrderNumber } from '@/lib/labels';
 
-export function DeleteOrderButton({
-  orderId,
-  onDeleted,
-}: {
+type DeleteOrderButtonProps = {
   orderId: number;
+  summary: string;
   onDeleted: () => void;
-}) {
+};
+
+export function DeleteOrderButton({ orderId, summary, onDeleted }: DeleteOrderButtonProps) {
   const [open, setOpen] = useState(false);
+  const number = formatOrderNumber(orderId);
   const [deleting, setDeleting] = useState(false);
   const deleteLock = useRef(false);
 
@@ -35,13 +36,13 @@ export function DeleteOrderButton({
 
     try {
       await deleteOrder(orderId);
-      toast.success(`Pedido nº ${orderId} excluído.`);
+      toast.success(`Pedido nº ${number} excluído.`);
       setOpen(false);
       onDeleted();
     } catch (error) {
       const apiError = toApiError(error);
       if (apiError.kind === 'not_found') {
-        toast.info(`O pedido nº ${orderId} já tinha sido excluído.`);
+        toast.info(`O pedido nº ${number} já tinha sido excluído.`);
         setOpen(false);
         onDeleted();
       } else {
@@ -56,13 +57,12 @@ export function DeleteOrderButton({
   return (
     <>
       <Button
-        variant="destructive"
-        size="sm"
+        variant="ghost"
         onClick={() => setOpen(true)}
-        aria-label={`Excluir pedido nº ${orderId}`}
+        className="h-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
       >
         <Trash2Icon />
-        Excluir
+        <span className="sr-only sm:not-sr-only">Excluir pedido</span>
       </Button>
       <AlertDialog
         open={open}
@@ -72,9 +72,10 @@ export function DeleteOrderButton({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir o pedido nº {orderId}?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir o pedido nº {number}?</AlertDialogTitle>
             <AlertDialogDescription>
-              O pedido sai do histórico e não pode ser recuperado.
+              <span className="block font-medium text-foreground">{summary}</span>O pedido sai do
+              histórico e não pode ser recuperado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
