@@ -7,20 +7,33 @@ Calculadora de cercas Gradil. A partir do comprimento, da altura e da cor deseja
 - **Entradas:** comprimento livre em metros (até 3 casas decimais), altura (1,03 m, 1,53 m ou 2,03 m) e cor (sem pintura, branca, preta ou verde).
 - **Cálculo:**
   - telas = `ceil(comprimento / 2,5 m)`;
-  - postes = telas + 1;
-  - fixadores = telas × 3, 4 ou 6, conforme a altura;
+  - postes = telas + 1, porque cada tela usa 2 postes e cada poste segura até 2 telas;
+  - fixadores = telas × 3, 4 ou 6, conforme a altura (1,03 m, 1,53 m ou 2,03 m);
   - parafusos = postes × 4.
 - **Saídas:** comprimento vendido, diferença para o comprimento pedido (só quando existe), tabela de componentes, desenho cotado e visualização 3D.
 - **Pedidos:** confirmação ou descarte do pedido. Os pedidos confirmados são salvos com a data de confirmação e listados do mais recente para o mais antigo.
+- **Histórico:**
+  - filtro por cor, busca pelo número do pedido e ordenação (mais recentes, mais antigos, mais longos ou mais curtos);
+  - cada pedido abre numa prancha com desenho cotado, visualização 3D e lista de materiais, que pode ser copiada;
+  - exclusão de pedido, com confirmação.
+
+### Premissa sobre os fixadores
+
+O enunciado diz que a tela usa "3 fixadores, 4 e 6" conforme a altura, mas não esclarece se a quantidade vale por tela ou por poste. O projeto interpreta como **por tela**: cada tela do pedido leva 3, 4 ou 6 fixadores. Para 6 telas de 1,53 m, por exemplo, são 6 × 4 = 24 fixadores. O cálculo fica em `packages/shared/src/fence-calculator.ts` e é usado pela API e pela web. Se a regra for por poste, é preciso ajustá-lo e também os textos "por tela" da prancha do pedido e a posição dos fixadores no 3D.
+
+### Visualizações
+
+- **Desenho cotado:** vista frontal com as cotas de comprimento, altura e de cada tela. A área hachurada é a sobra da última tela. Cercas longas têm o trecho do meio encurtado, e a quebra indica quantas telas foram omitidas (por exemplo, `+2 telas`).
+- **3D:** modelo interativo (girar, aproximar e mover). A tela é desenhada com fios verticais e horizontais e dobras em V, os postes têm tampa, base e parafusos, e os fixadores aparecem na quantidade do pedido. O detalhe completo vale para as primeiras 60 telas; as demais usam uma representação simplificada.
 
 ## Stack
 
-| Parte             | Tecnologia                                                                                                |
-| ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Monorepo          | npm workspaces                                                                                            |
-| `packages/shared` | TypeScript, Zod e Vitest (regras de cálculo, schemas e tipos compartilhados)                              |
-| `apps/api`        | NestJS 11, Prisma 7, SQLite (`better-sqlite3`) e Jest                                                     |
-| `apps/web`        | Next.js 16 (export estático), React 19, Tailwind 4, shadcn/ui, React Hook Form, Axios e React Three Fiber |
+| Parte             | Tecnologia                                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| Monorepo          | npm workspaces                                                                                                  |
+| `packages/shared` | TypeScript, Zod e Vitest (regras de cálculo, schemas e tipos compartilhados)                                    |
+| `apps/api`        | NestJS 11, Prisma 7, SQLite (`better-sqlite3`) e Jest                                                           |
+| `apps/web`        | Next.js 16 (export estático), React 19, Tailwind 4, shadcn/ui, React Hook Form, Axios, React Three Fiber e drei |
 
 ## Estrutura
 
