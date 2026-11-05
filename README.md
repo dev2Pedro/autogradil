@@ -4,7 +4,7 @@ Calculadora de cercas Gradil. A partir do comprimento, da altura e da cor deseja
 
 ## Funcionalidades
 
-- **Entradas:** comprimento livre em metros (até 3 casas decimais), altura (1,03 m, 1,53 m ou 2,03 m) e cor (sem pintura, branca, preta ou verde).
+- **Entradas:** comprimento livre em metros, de 0,001 m a 10.000 m, com até 3 casas decimais e vírgula ou ponto como separador decimal (`12,5` ou `12.5`). Ponto seguido de 3 dígitos (`10.000`) é recusado por ser ambíguo: para 10 mil metros, digite `10000`. Altura de 1,03 m, 1,53 m ou 2,03 m e cor sem pintura, branca, preta ou verde.
 - **Cálculo:**
   - telas = `ceil(comprimento / 2,5 m)`;
   - postes = telas + 1, porque cada tela usa 2 postes e cada poste segura até 2 telas;
@@ -13,7 +13,7 @@ Calculadora de cercas Gradil. A partir do comprimento, da altura e da cor deseja
 - **Saídas:** comprimento vendido, diferença para o comprimento pedido (só quando existe), tabela de componentes, desenho cotado e visualização 3D.
 - **Pedidos:** confirmação ou descarte do pedido. Os pedidos confirmados são salvos com a data de confirmação e listados do mais recente para o mais antigo.
 - **Histórico:**
-  - filtro por cor, busca pelo número do pedido e ordenação (mais recentes, mais antigos, mais longos ou mais curtos);
+  - filtro por cor, busca pelo número do pedido e ordenação (mais recentes, mais antigos, maior comprimento ou menor comprimento);
   - paginação com 10 pedidos por página. Filtro, busca, ordenação e totais consideram todos os pedidos;
   - cada pedido abre numa prancha com desenho cotado, visualização 3D e lista de materiais, que pode ser copiada;
   - exclusão de pedido, com confirmação.
@@ -43,6 +43,7 @@ autogradil/
 ├── apps/
 │   ├── api/          # API REST (NestJS + Prisma)
 │   │   ├── prisma/   # schema.prisma e migrations
+│   │   ├── scripts/  # ensure-env.mjs (cria o .env na primeira execução)
 │   │   └── src/      # módulos calculator, orders, health, prisma
 │   └── web/          # front-end (Next.js)
 │       └── src/      # app/, components/, lib/
@@ -55,7 +56,7 @@ autogradil/
 - Node.js 22 (a partir de 22.12), 24 ou 26. As versões ímpares (23 e 25) não são suportadas. Com [nvm](https://github.com/nvm-sh/nvm), rode `nvm use` na raiz: o `.nvmrc` seleciona o Node 22
 - npm 10 ou superior
 
-## Passo a passo para avaliar
+## Passo a passo
 
 1. Clone o repositório e entre na pasta:
 
@@ -79,11 +80,11 @@ autogradil/
    npm run dev
    ```
 
-4. Abra http://localhost:3000 e teste:
+4. Abra http://localhost:3000 e use o sistema:
    - **Calculadora:** informe o comprimento em metros (por exemplo `12,5`), escolha a altura e a cor e clique em **Calcular**. Confira o resumo, a tabela de componentes, o desenho cotado e a visualização 3D. Depois clique em **Confirmar pedido** ou em **Não confirmar**.
-   - **Pedidos** (http://localhost:3000/history): o pedido confirmado aparece no topo. Teste o filtro por cor, a busca pelo número, a ordenação e a paginação (10 pedidos por página). Clique num pedido para abrir a prancha com desenho cotado, 3D e lista de materiais, que pode ser copiada ou excluída.
+   - **Pedidos** (http://localhost:3000/history): o pedido confirmado aparece no topo. Use o filtro por cor, a busca pelo número, a ordenação e a paginação (10 pedidos por página). Clique num pedido para abrir a prancha com desenho cotado, 3D e lista de materiais. Na prancha dá para copiar a lista e excluir o pedido.
 
-5. Em outro terminal, rode os testes. Não é preciso parar o `npm run dev`, porque os testes da API usam um banco temporário próprio:
+5. Para rodar os testes, use outro terminal. Não é preciso parar o `npm run dev`, porque os testes da API usam um banco temporário próprio:
 
    ```bash
    npm test
