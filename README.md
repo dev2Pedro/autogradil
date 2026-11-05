@@ -51,32 +51,37 @@ autogradil/
 
 ## Pré-requisitos
 
-- Node.js 20 ou superior
+- Node.js 22 (a partir de 22.12), 24 ou 26. As versões ímpares (23 e 25) não são suportadas. Com [nvm](https://github.com/nvm-sh/nvm), rode `nvm use` na raiz: o `.nvmrc` seleciona o Node 22
 - npm 10 ou superior
 
 ## Instalação
 
-1. Instale as dependências de todos os workspaces a partir da raiz:
+Na raiz, instale as dependências e suba o projeto:
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. Crie os arquivos de ambiente a partir dos exemplos:
+```bash
+npm run dev
+```
 
-   ```bash
-   cp apps/api/.env.example apps/api/.env
-   ```
+O resto é automático:
 
-   ```bash
-   cp apps/web/.env.example apps/web/.env.local
-   ```
+- o `npm install` gera o Prisma Client;
+- antes de subir a API, o `npm run dev` cria o `apps/api/.env` a partir do `.env.example` (se ainda não existir) e aplica as migrations, criando o banco SQLite em `apps/api/dev.db`. Os dados existentes são mantidos.
 
-3. Gere o Prisma Client e crie o banco SQLite (`apps/api/dev.db`):
+O `apps/web/.env.local` é opcional: sem ele, a web usa a API em `http://localhost:3001/api`. Para mudar, copie o exemplo:
 
-   ```bash
-   cd apps/api && npx prisma generate && npx prisma migrate deploy
-   ```
+```bash
+cp apps/web/.env.example apps/web/.env.local
+```
+
+Para preparar o banco manualmente, sem subir a API:
+
+```bash
+npm run db:setup -w @autogradil/api
+```
 
 ### Variáveis de ambiente
 
@@ -100,7 +105,7 @@ As variáveis da API são validadas com Zod na inicialização. Um valor inváli
 
 ### Desenvolvimento
 
-Na raiz, este comando compila o `shared` e sobe API e web juntas:
+Na raiz, este comando compila o `shared`, prepara o `.env` e o banco da API e sobe API e web juntas:
 
 ```bash
 npm run dev
@@ -132,7 +137,7 @@ npm run build
 npm run start
 ```
 
-O `build` gera o pacote `shared`, o site estático da web em `apps/web/out` e a API em `apps/api/dist`. O `start` sobe somente a API. Sirva a pasta `apps/web/out` com qualquer servidor de arquivos estáticos, por exemplo:
+O `build` gera o pacote `shared`, o site estático da web em `apps/web/out` e a API em `apps/api/dist`. O `start` prepara o `.env` e o banco da mesma forma que o `dev` e sobe somente a API. Sirva a pasta `apps/web/out` com qualquer servidor de arquivos estáticos, por exemplo:
 
 ```bash
 npx serve apps/web/out -l 3000
