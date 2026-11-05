@@ -55,21 +55,45 @@ autogradil/
 - Node.js 22 (a partir de 22.12), 24 ou 26. As versões ímpares (23 e 25) não são suportadas. Com [nvm](https://github.com/nvm-sh/nvm), rode `nvm use` na raiz: o `.nvmrc` seleciona o Node 22
 - npm 10 ou superior
 
+## Passo a passo para avaliar
+
+1. Clone o repositório e entre na pasta:
+
+   ```bash
+   git clone https://github.com/dev2Pedro/autogradil.git
+   ```
+
+   ```bash
+   cd autogradil
+   ```
+
+2. Instale as dependências. Esse comando também gera o Prisma Client e compila o pacote `shared`:
+
+   ```bash
+   npm install
+   ```
+
+3. Suba a API e a web. Na primeira vez, o comando cria o `apps/api/.env` a partir do `.env.example` e o banco SQLite em `apps/api/dev.db`. As portas 3000 (web) e 3001 (API) precisam estar livres:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Abra http://localhost:3000 e teste:
+   - **Calculadora:** informe o comprimento em metros (por exemplo `12,5`), escolha a altura e a cor e clique em **Calcular**. Confira o resumo, a tabela de componentes, o desenho cotado e a visualização 3D. Depois clique em **Confirmar pedido** ou em **Não confirmar**.
+   - **Pedidos** (http://localhost:3000/history): o pedido confirmado aparece no topo. Teste o filtro por cor, a busca pelo número, a ordenação e a paginação (10 pedidos por página). Clique num pedido para abrir a prancha com desenho cotado, 3D e lista de materiais, que pode ser copiada ou excluída.
+
+5. Em outro terminal, rode os testes. Não é preciso parar o `npm run dev`, porque os testes da API usam um banco temporário próprio:
+
+   ```bash
+   npm test
+   ```
+
 ## Instalação
 
-Na raiz, instale as dependências e suba o projeto:
+A instalação é a dos passos 2 e 3 acima. Nos dois comandos, o resto é automático:
 
-```bash
-npm install
-```
-
-```bash
-npm run dev
-```
-
-O resto é automático:
-
-- o `npm install` gera o Prisma Client;
+- o `npm install` gera o Prisma Client e compila o `shared`;
 - antes de subir a API, o `npm run dev` cria o `apps/api/.env` a partir do `.env.example` (se ainda não existir) e aplica as migrations, criando o banco SQLite em `apps/api/dev.db`. Os dados existentes são mantidos.
 
 O `apps/web/.env.local` é opcional: sem ele, a web usa a API em `http://localhost:3001/api`. Para mudar, copie o exemplo:
