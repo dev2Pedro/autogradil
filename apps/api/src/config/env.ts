@@ -10,6 +10,9 @@ export const envSchema = z.object({
   CORS_ORIGIN: z
     .url({ error: 'CORS_ORIGIN deve ser uma URL, por exemplo http://localhost:3000.' })
     .optional(),
+  DATABASE_URL: z
+    .string({ error: 'DATABASE_URL é obrigatória, por exemplo file:./dev.db.' })
+    .min(1, 'DATABASE_URL é obrigatória, por exemplo file:./dev.db.'),
 });
 
 export type Env = z.infer<typeof envSchema>;

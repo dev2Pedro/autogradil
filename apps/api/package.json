@@ -15,7 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
-    "studio": "prisma studio --port 5555 --url \"file://$PWD/dev.db\""
+    "studio": "prisma studio --port 5555"
   },
   "dependencies": {
     "@autogradil/shared": "*",
@@ -37,6 +37,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
+    "dotenv": "^17.4.2",
     "jest": "^30.0.0",
     "prisma": "^7.10.1",
     "source-map-support": "^0.5.21",

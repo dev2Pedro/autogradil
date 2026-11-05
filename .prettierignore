@@ -7,3 +7,4 @@ release
 package-lock.json
 roadmap.md
 next-env.d.ts
+apps/api/src/generated

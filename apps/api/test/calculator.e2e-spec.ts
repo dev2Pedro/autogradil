@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
+import { rmSync } from 'fs';
 import path from 'path';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -10,11 +9,10 @@ import { HttpExceptionFilter } from 'src/common/http-exception.filter';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('/api/calculate', () => {
-  const dbDir = mkdtempSync(path.join(tmpdir(), 'autogradil-e2e-'));
+  const dbDir = path.dirname(process.env.DATABASE_URL!.slice('file:'.length));
   let app: INestApplication;
 
   beforeAll(async () => {
-    process.env.DATABASE_URL = `file:${path.join(dbDir, 'test.db')}`;
     execSync('npx prisma migrate deploy', {
       cwd: path.resolve(__dirname, '..'),
       env: { ...process.env, NODE_OPTIONS: '' },
