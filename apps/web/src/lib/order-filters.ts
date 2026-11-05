@@ -41,3 +41,13 @@ export function filterOrders(orders: OrderListItem[], { color, query, sort }: Or
     .filter((order) => number === '' || String(order.id).includes(number))
     .sort(SORTERS[sort]);
 }
+
+export const PAGE_SIZE = 10;
+
+export function paginate<T>(items: T[], page: number, pageSize = PAGE_SIZE) {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const current = Math.min(Math.max(1, page), totalPages);
+  const start = (current - 1) * pageSize;
+
+  return { items: items.slice(start, start + pageSize), page: current, totalPages };
+}

@@ -1,8 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronRightIcon, CircleAlertIcon, RefreshCwIcon, SearchIcon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CircleAlertIcon,
+  RefreshCwIcon,
+  SearchIcon,
+} from 'lucide-react';
 import { FENCE_COLORS, type FenceColor, type OrderListItem } from '@autogradil/shared';
 import { FenceElevation } from '@/components/fence-elevation';
 import { FenceSwatch } from '@/components/fence-swatch';
@@ -31,6 +37,7 @@ import {
   filterOrders,
   hasActiveFilters,
   isSortKey,
+  paginate,
   SORT_OPTIONS,
   type SortKey,
 } from '@/lib/order-filters';
@@ -248,6 +255,8 @@ export function OrderHistory() {
   const [colorFilter, setColorFilter] = useState<FenceColor | null>(null);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('recent');
+  const [page, setPage] = useState(1);
+  const listRef = useRef<HTMLElement>(null);
 
   const orders = useMemo(() => (state.status === 'success' ? state.orders : []), [state]);
   const selectedOrder = orders.find((order) => order.id === selectedId) ?? null;
@@ -256,6 +265,7 @@ export function OrderHistory() {
     [orders, colorFilter, query, sort],
   );
   const filtering = hasActiveFilters({ color: colorFilter, query });
+  const pagination = paginate(visibleOrders, page);
   const longestMm = Math.max(1, ...visibleOrders.map((order) => order.summary.soldLengthMm));
 
   const load = useCallback(async () => {
@@ -280,9 +290,29 @@ export function OrderHistory() {
     );
   }, []);
 
+  function goToPage(next: number) {
+    setPage(next);
+    listRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function changeColorFilter(color: FenceColor | null) {
+    setColorFilter(color);
+    setPage(1);
+  }
+
+  function changeQuery(value: string) {
+    setQuery(value);
+    setPage(1);
+  }
+
+  function changeSort(value: SortKey) {
+    setSort(value);
+    setPage(1);
+  }
+
   function clearFilters() {
-    setColorFilter(null);
-    setQuery('');
+    changeColorFilter(null);
+    changeQuery('');
   }
 
   return (
@@ -315,7 +345,7 @@ export function OrderHistory() {
 
       {state.status === 'success' && orders.length > 0 && (
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <ColorFilter orders={orders} value={colorFilter} onChange={setColorFilter} />
+          <ColorFilter orders={orders} value={colorFilter} onChange={changeColorFilter} />
           <div className="flex gap-2">
             <div className="relative min-w-0 flex-1 lg:w-44 lg:flex-none">
               <SearchIcon
@@ -326,7 +356,7 @@ export function OrderHistory() {
                 type="search"
                 inputMode="numeric"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => changeQuery(event.target.value)}
                 placeholder="Buscar nº"
                 aria-label="Buscar pedido pelo número"
                 className="h-9 pl-9"
@@ -335,7 +365,7 @@ export function OrderHistory() {
             <Select
               items={SORT_OPTIONS}
               value={sort}
-              onValueChange={(value) => setSort(isSortKey(value) ? value : 'recent')}
+              onValueChange={(value) => changeSort(isSortKey(value) ? value : 'recent')}
             >
               <SelectTrigger aria-label="Ordenar pedidos" className="h-9! w-48">
                 <SelectValue />
@@ -379,14 +409,14 @@ export function OrderHistory() {
       )}
 
       {visibleOrders.length > 0 && (
-        <section aria-label="Pedidos confirmados">
+        <section ref={listRef} aria-label="Pedidos confirmados" className="scroll-mt-6">
           {filtering && (
             <p className="mb-2 text-sm text-muted-foreground" aria-live="polite">
               Mostrando {plural(visibleOrders.length, 'pedido', 'pedidos')} de {orders.length}
             </p>
           )}
           <ol className="border-t border-rule/50">
-            {visibleOrders.map((order) => (
+            {pagination.items.map((order) => (
               <OrderRow
                 key={order.id}
                 order={order}
@@ -395,6 +425,32 @@ export function OrderHistory() {
               />
             ))}
           </ol>
+          {pagination.totalPages > 1 && (
+            <nav
+              aria-label="Paginação dos pedidos"
+              className="mt-6 flex items-center justify-between gap-3"
+            >
+              <Button
+                variant="outline"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page === 1}
+              >
+                <ChevronLeftIcon />
+                Anterior
+              </Button>
+              <p className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
+                Página {pagination.page} de {pagination.totalPages}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={pagination.page === pagination.totalPages}
+              >
+                Próxima
+                <ChevronRightIcon />
+              </Button>
+            </nav>
+          )}
         </section>
       )}
 

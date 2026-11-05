@@ -5,7 +5,13 @@ import {
   type FenceColor,
   type OrderListItem,
 } from '@autogradil/shared';
-import { filterOrders, hasActiveFilters, isSortKey, orderNumberQuery } from './order-filters';
+import {
+  filterOrders,
+  hasActiveFilters,
+  isSortKey,
+  orderNumberQuery,
+  paginate,
+} from './order-filters';
 
 function order(
   id: number,
@@ -100,5 +106,27 @@ describe('isSortKey', () => {
     expect(isSortKey('recent')).toBe(true);
     expect(isSortKey('random')).toBe(false);
     expect(isSortKey(null)).toBe(false);
+  });
+});
+
+describe('paginate', () => {
+  const items = Array.from({ length: 23 }, (_, index) => index + 1);
+
+  it('divide em páginas do tamanho pedido', () => {
+    expect(paginate(items, 1)).toEqual({ items: items.slice(0, 10), page: 1, totalPages: 3 });
+    expect(paginate(items, 3)).toEqual({ items: [21, 22, 23], page: 3, totalPages: 3 });
+  });
+
+  it('ajusta páginas fora do intervalo para a mais próxima', () => {
+    expect(paginate(items, 9).page).toBe(3);
+    expect(paginate(items, 0).page).toBe(1);
+  });
+
+  it('tem sempre ao menos uma página', () => {
+    expect(paginate([], 1)).toEqual({ items: [], page: 1, totalPages: 1 });
+  });
+
+  it('volta uma página quando a última fica vazia', () => {
+    expect(paginate(items.slice(0, 20), 3)).toMatchObject({ page: 2, totalPages: 2 });
   });
 });

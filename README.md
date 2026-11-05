@@ -14,6 +14,7 @@ Calculadora de cercas Gradil. A partir do comprimento, da altura e da cor deseja
 - **Pedidos:** confirmação ou descarte do pedido. Os pedidos confirmados são salvos com a data de confirmação e listados do mais recente para o mais antigo.
 - **Histórico:**
   - filtro por cor, busca pelo número do pedido e ordenação (mais recentes, mais antigos, mais longos ou mais curtos);
+  - paginação com 10 pedidos por página. Filtro, busca, ordenação e totais consideram todos os pedidos;
   - cada pedido abre numa prancha com desenho cotado, visualização 3D e lista de materiais, que pode ser copiada;
   - exclusão de pedido, com confirmação.
 
