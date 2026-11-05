@@ -27,28 +27,19 @@ import {
   formatRelativeDate,
   plural,
 } from '@/lib/labels';
+import {
+  filterOrders,
+  hasActiveFilters,
+  isSortKey,
+  SORT_OPTIONS,
+  type SortKey,
+} from '@/lib/order-filters';
 import { cn } from '@/lib/utils';
 
 type HistoryState =
   | { status: 'loading' }
   | { status: 'error'; error: ApiError }
   | { status: 'success'; orders: OrderListItem[] };
-
-type SortKey = 'recent' | 'oldest' | 'longest' | 'shortest';
-
-const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
-  { value: 'recent', label: 'Mais recentes' },
-  { value: 'oldest', label: 'Mais antigos' },
-  { value: 'longest', label: 'Maior comprimento' },
-  { value: 'shortest', label: 'Menor comprimento' },
-];
-
-const SORTERS: Record<SortKey, (a: OrderListItem, b: OrderListItem) => number> = {
-  recent: (a, b) => b.confirmedAt.localeCompare(a.confirmedAt) || b.id - a.id,
-  oldest: (a, b) => a.confirmedAt.localeCompare(b.confirmedAt) || a.id - b.id,
-  longest: (a, b) => b.summary.soldLengthMm - a.summary.soldLengthMm || b.id - a.id,
-  shortest: (a, b) => a.summary.soldLengthMm - b.summary.soldLengthMm || a.id - b.id,
-};
 
 function summarize(orders: OrderListItem[]): string {
   const meters = orders.reduce((total, order) => total + order.summary.soldLengthMm, 0);
@@ -260,14 +251,11 @@ export function OrderHistory() {
 
   const orders = useMemo(() => (state.status === 'success' ? state.orders : []), [state]);
   const selectedOrder = orders.find((order) => order.id === selectedId) ?? null;
-  const visibleOrders = useMemo(() => {
-    const digits = query.replace(/\D/g, '');
-    return orders
-      .filter((order) => colorFilter === null || order.color === colorFilter)
-      .filter((order) => digits === '' || String(order.id).includes(String(Number(digits))))
-      .sort(SORTERS[sort]);
-  }, [orders, colorFilter, query, sort]);
-  const filtering = colorFilter !== null || query.trim() !== '';
+  const visibleOrders = useMemo(
+    () => filterOrders(orders, { color: colorFilter, query, sort }),
+    [orders, colorFilter, query, sort],
+  );
+  const filtering = hasActiveFilters({ color: colorFilter, query });
   const longestMm = Math.max(1, ...visibleOrders.map((order) => order.summary.soldLengthMm));
 
   const load = useCallback(async () => {
@@ -347,7 +335,7 @@ export function OrderHistory() {
             <Select
               items={SORT_OPTIONS}
               value={sort}
-              onValueChange={(value) => setSort((value as SortKey | null) ?? 'recent')}
+              onValueChange={(value) => setSort(isSortKey(value) ? value : 'recent')}
             >
               <SelectTrigger aria-label="Ordenar pedidos" className="h-9! w-48">
                 <SelectValue />

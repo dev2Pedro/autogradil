@@ -28,12 +28,12 @@ O enunciado diz que a tela usa "3 fixadores, 4 e 6" conforme a altura, mas não 
 
 ## Stack
 
-| Parte             | Tecnologia                                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------------------------- |
-| Monorepo          | npm workspaces                                                                                                  |
-| `packages/shared` | TypeScript, Zod e Vitest (regras de cálculo, schemas e tipos compartilhados)                                    |
-| `apps/api`        | NestJS 11, Prisma 7, SQLite (`better-sqlite3`) e Jest                                                           |
-| `apps/web`        | Next.js 16 (export estático), React 19, Tailwind 4, shadcn/ui, React Hook Form, Axios, React Three Fiber e drei |
+| Parte             | Tecnologia                                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Monorepo          | npm workspaces                                                                                                          |
+| `packages/shared` | TypeScript, Zod e Vitest (regras de cálculo, schemas e tipos compartilhados)                                            |
+| `apps/api`        | NestJS 11, Prisma 7, SQLite (`better-sqlite3`) e Jest                                                                   |
+| `apps/web`        | Next.js 16 (export estático), React 19, Tailwind 4, shadcn/ui, React Hook Form, Axios, React Three Fiber, drei e Vitest |
 
 ## Estrutura
 
@@ -205,13 +205,13 @@ curl -X POST http://localhost:3001/api/calculate -H "Content-Type: application/j
 
 ## Scripts úteis (raiz)
 
-| Script                                    | O que faz                                                                              |
-| ----------------------------------------- | -------------------------------------------------------------------------------------- |
-| `npm run dev`                             | Sobe API e web em modo desenvolvimento                                                 |
-| `npm run build`                           | Build de `shared`, web e API                                                           |
-| `npm run start`                           | Sobe a API compilada                                                                   |
-| `npm run studio`                          | Abre o Prisma Studio                                                                   |
-| `npm test`                                | Roda os testes de todos os workspaces (Vitest no `shared`, Jest unitário e e2e na API) |
-| `npm run typecheck`                       | Checagem de tipos em todos os workspaces                                               |
-| `npm run lint` / `npm run lint:fix`       | ESLint                                                                                 |
-| `npm run format` / `npm run format:check` | Prettier                                                                               |
+| Script                                    | O que faz                                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `npm run dev`                             | Sobe API e web em modo desenvolvimento                                                          |
+| `npm run build`                           | Build de `shared`, web e API                                                                    |
+| `npm run start`                           | Sobe a API compilada                                                                            |
+| `npm run studio`                          | Abre o Prisma Studio                                                                            |
+| `npm test`                                | Roda os testes de todos os workspaces (Vitest no `shared` e na web, Jest unitário e e2e na API) |
+| `npm run typecheck`                       | Checagem de tipos em todos os workspaces                                                        |
+| `npm run lint` / `npm run lint:fix`       | ESLint                                                                                          |
+| `npm run format` / `npm run format:check` | Prettier                                                                                        |

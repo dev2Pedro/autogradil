@@ -39,22 +39,29 @@ export function FenceCalculator() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const confirmLock = useRef(false);
+  const latestRequest = useRef(0);
 
   const handleValuesChange = useCallback(() => {
+    latestRequest.current += 1;
     setResult(null);
     setCalculationError(null);
+    setCalculating(false);
   }, []);
 
   async function handleCalculate(input: CalculateInput): Promise<FormFieldErrors> {
+    const request = ++latestRequest.current;
+    const isStale = () => request !== latestRequest.current;
     setCalculating(true);
     setCalculationError(null);
     setResult(null);
 
     try {
       const calculation = await calculate(input);
+      if (isStale()) return {};
       setResult({ calculation, input, clientRequestId: crypto.randomUUID() });
       return {};
     } catch (error) {
+      if (isStale()) return {};
       const apiError = toApiError(error);
       if (apiError.kind !== 'validation') {
         setCalculationError(apiError);
@@ -67,7 +74,7 @@ export function FenceCalculator() {
       }
       return errors;
     } finally {
-      setCalculating(false);
+      if (!isStale()) setCalculating(false);
     }
   }
 
@@ -140,12 +147,7 @@ export function FenceCalculator() {
             <ComponentsTable components={result.calculation.components} />
           </div>
 
-          <FenceViews
-            panels={result.calculation.components.panels}
-            posts={result.calculation.components.posts}
-            heightMm={result.calculation.heightMm}
-            color={result.input.color}
-          />
+          <FenceViews calculation={result.calculation} color={result.input.color} />
 
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={handleDiscard} disabled={confirming}>

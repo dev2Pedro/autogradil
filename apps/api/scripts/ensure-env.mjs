@@ -1,5 +1,3 @@
-// Cria o apps/api/.env a partir do .env.example na primeira execução.
-// Um .env existente nunca é sobrescrito.
 import { copyFileSync, existsSync } from 'node:fs';
 
 const env = new URL('../.env', import.meta.url);

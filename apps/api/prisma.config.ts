@@ -3,7 +3,6 @@ import { pathToFileURL } from 'url';
 import { defineConfig } from 'prisma/config';
 import { resolveDatabaseUrl } from './src/prisma/resolve-database-url';
 
-// O Prisma Studio só aceita SQLite com caminho absoluto no formato file:///.
 function datasourceUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
 

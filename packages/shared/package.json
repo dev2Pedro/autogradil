@@ -14,6 +14,7 @@
     "dist"
   ],
   "scripts": {
+    "postinstall": "npm run build",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",

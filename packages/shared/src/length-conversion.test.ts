@@ -3,7 +3,7 @@ import { formatMmToMeters, parseMetersToMm } from './length-conversion';
 import { MAX_LENGTH_MM, MIN_LENGTH_MM } from './constants';
 
 describe('parseMetersToMm', () => {
-  it('should convert meters to millimeters', () => {
+  it('converte metros em milímetros', () => {
     expect(parseMetersToMm('6,5')).toEqual({ ok: true, lengthMm: 6500 });
   });
 
@@ -17,7 +17,9 @@ describe('parseMetersToMm', () => {
     ['6,125', 6125],
     ['0,001', MIN_LENGTH_MM],
     ['10000', MAX_LENGTH_MM],
-    ['10.000', 10000],
+    ['2.03', 2030],
+    ['1.5', 1500],
+    ['12.25', 12250],
     ['  6,5  ', 6500],
   ])('converte %j para %i mm', (input, expected) => {
     expect(parseMetersToMm(input)).toEqual({ ok: true, lengthMm: expected });
@@ -35,6 +37,9 @@ describe('parseMetersToMm', () => {
     ['zero', '0', 'range'],
     ['zero com decimais', '0,000', 'range'],
     ['4 casas decimais', '2,5005', 'decimals'],
+    ['ponto seguido de 3 dígitos (milhar ou decimal?)', '10.000', 'ambiguous'],
+    ['ponto de milhar curto', '1.500', 'ambiguous'],
+    ['ponto com 3 decimais', '2.030', 'ambiguous'],
     ['acima do limite', '10000,001', 'range'],
     ['ponto e vírgula juntos', '10.000,001', 'format'],
     ['dois separadores iguais', '1,2,3', 'format'],

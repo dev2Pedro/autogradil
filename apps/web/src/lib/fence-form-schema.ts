@@ -11,6 +11,7 @@ const LENGTH_ERROR_MESSAGES: Record<ParseMetersError, string> = {
   empty: 'Informe o comprimento em metros.',
   format: 'Digite apenas números positivos, por exemplo 12,5.',
   decimals: 'Use no máximo 3 casas decimais.',
+  ambiguous: 'Use vírgula para os decimais e não use ponto de milhar. Ex.: 1,5 ou 1500.',
   range: 'Informe um valor entre 0,001 m e 10.000 m.',
 };
 

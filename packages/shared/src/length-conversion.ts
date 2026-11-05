@@ -3,6 +3,7 @@ import type { ParseMetersResult } from './types';
 
 const NUMBER_PATTERN = /^\d+(?:[.,]\d+)?$/;
 const METERS_PATTERN = /^\d+(?:[.,]\d{1,3})?$/;
+const THOUSANDS_PATTERN = /^\d{1,3}\.\d{3}$/;
 
 export function parseMetersToMm(input: string): ParseMetersResult {
   const value = input.trim();
@@ -10,6 +11,7 @@ export function parseMetersToMm(input: string): ParseMetersResult {
   if (value === '') return { ok: false, error: 'empty' };
   if (!NUMBER_PATTERN.test(value)) return { ok: false, error: 'format' };
   if (!METERS_PATTERN.test(value)) return { ok: false, error: 'decimals' };
+  if (THOUSANDS_PATTERN.test(value)) return { ok: false, error: 'ambiguous' };
 
   const [integer, decimal = ''] = value.replace(',', '.').split('.');
   const parsed = lengthMmSchema.safeParse(Number(integer) * 1000 + Number(decimal.padEnd(3, '0')));

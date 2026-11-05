@@ -24,7 +24,7 @@ export type Order = z.infer<typeof orderSchema>;
 export type OrderListItem = z.infer<typeof orderListItemSchema>;
 export type ApiErrorBody = z.infer<typeof apiErrorBodySchema>;
 
-export type ParseMetersError = 'empty' | 'format' | 'decimals' | 'range';
+export type ParseMetersError = 'empty' | 'format' | 'decimals' | 'ambiguous' | 'range';
 
 export type ParseMetersResult =
   { ok: true; lengthMm: LengthMm } | { ok: false; error: ParseMetersError };

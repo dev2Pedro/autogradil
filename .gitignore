@@ -30,3 +30,5 @@ release/
 
 # gerado pelo Next a cada build
 next-env.d.ts
+
+skills-lock.json
